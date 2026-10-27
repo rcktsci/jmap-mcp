@@ -1,0 +1,3199 @@
+{
+  "generator": "tools/tools_schema.py",
+  "sdk": "mcp 2.3.0 / pydantic 2.13.5 / jsonschema 4.26.0",
+  "tools": 15,
+  "input_properties_total": 65,
+  "output_properties_total": 58,
+  "checks": [
+    {
+      "tool": "whoami",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 0,
+      "output_properties": 5,
+      "output_defs": [
+        "EmailAddress",
+        "Identity"
+      ],
+      "input_required": [],
+      "input_optional": [],
+      "output_fields": [
+        "account_id",
+        "capabilities",
+        "email",
+        "identities",
+        "state"
+      ]
+    },
+    {
+      "tool": "list_identities",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 0,
+      "output_properties": 1,
+      "output_defs": [
+        "EmailAddress",
+        "Identity"
+      ],
+      "input_required": [],
+      "input_optional": [],
+      "output_fields": [
+        "identities"
+      ]
+    },
+    {
+      "tool": "list_mailboxes",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 0,
+      "output_properties": 1,
+      "output_defs": [
+        "Mailbox"
+      ],
+      "input_required": [],
+      "input_optional": [],
+      "output_fields": [
+        "mailboxes"
+      ]
+    },
+    {
+      "tool": "list_emails",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 10,
+      "output_properties": 4,
+      "output_defs": [
+        "EmailAddress",
+        "EmailSummary"
+      ],
+      "input_required": [],
+      "input_optional": [
+        "after",
+        "before",
+        "flagged",
+        "has_attachment",
+        "limit",
+        "mailbox_id",
+        "mailbox_role",
+        "position",
+        "sort",
+        "unread"
+      ],
+      "output_fields": [
+        "emails",
+        "has_more",
+        "position",
+        "total"
+      ]
+    },
+    {
+      "tool": "search_emails",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 14,
+      "output_properties": 4,
+      "output_defs": [
+        "EmailAddress",
+        "EmailSummary"
+      ],
+      "input_required": [],
+      "input_optional": [
+        "after",
+        "before",
+        "flagged",
+        "from_address",
+        "has_attachment",
+        "limit",
+        "mailbox_id",
+        "mailbox_role",
+        "position",
+        "sort",
+        "subject",
+        "text",
+        "to_address",
+        "unread"
+      ],
+      "output_fields": [
+        "emails",
+        "has_more",
+        "position",
+        "total"
+      ]
+    },
+    {
+      "tool": "count_emails",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 11,
+      "output_properties": 1,
+      "output_defs": [],
+      "input_required": [],
+      "input_optional": [
+        "after",
+        "before",
+        "flagged",
+        "from_address",
+        "has_attachment",
+        "mailbox_id",
+        "mailbox_role",
+        "subject",
+        "text",
+        "to_address",
+        "unread"
+      ],
+      "output_fields": [
+        "count"
+      ]
+    },
+    {
+      "tool": "get_email",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 2,
+      "output_properties": 16,
+      "output_defs": [
+        "Attachment",
+        "EmailAddress"
+      ],
+      "input_required": [
+        "email_id"
+      ],
+      "input_optional": [
+        "max_body_chars"
+      ],
+      "output_fields": [
+        "attachments",
+        "bcc",
+        "cc",
+        "date",
+        "from",
+        "id",
+        "in_reply_to",
+        "keywords",
+        "message_id",
+        "preview",
+        "reply_to",
+        "subject",
+        "text_body",
+        "thread_id",
+        "to",
+        "truncated"
+      ]
+    },
+    {
+      "tool": "get_thread",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 4,
+      "output_properties": 4,
+      "output_defs": [
+        "Attachment",
+        "EmailAddress",
+        "EmailDetail"
+      ],
+      "input_required": [
+        "thread_id"
+      ],
+      "input_optional": [
+        "include_bodies",
+        "max_body_chars",
+        "max_messages"
+      ],
+      "output_fields": [
+        "emails",
+        "message_count",
+        "subject",
+        "thread_id"
+      ]
+    },
+    {
+      "tool": "set_flags",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 4,
+      "output_properties": 2,
+      "output_defs": [],
+      "input_required": [
+        "ids"
+      ],
+      "input_optional": [
+        "answered",
+        "flagged",
+        "seen"
+      ],
+      "output_fields": [
+        "not_found",
+        "updated"
+      ]
+    },
+    {
+      "tool": "move_emails",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 3,
+      "output_properties": 2,
+      "output_defs": [],
+      "input_required": [
+        "ids"
+      ],
+      "input_optional": [
+        "mailbox_id",
+        "mailbox_role"
+      ],
+      "output_fields": [
+        "moved",
+        "not_found"
+      ]
+    },
+    {
+      "tool": "create_draft",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 9,
+      "output_properties": 2,
+      "output_defs": [],
+      "input_required": [
+        "body",
+        "subject",
+        "to"
+      ],
+      "input_optional": [
+        "attachments",
+        "bcc",
+        "body_html",
+        "cc",
+        "from_identity_id",
+        "in_reply_to"
+      ],
+      "output_fields": [
+        "draft_id",
+        "thread_id"
+      ]
+    },
+    {
+      "tool": "send_draft",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 1,
+      "output_properties": 3,
+      "output_defs": [
+        "EmailAddress"
+      ],
+      "input_required": [
+        "draft_id"
+      ],
+      "input_optional": [],
+      "output_fields": [
+        "message_id",
+        "recipients",
+        "sent_at"
+      ]
+    },
+    {
+      "tool": "list_changes",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 2,
+      "output_properties": 5,
+      "output_defs": [],
+      "input_required": [
+        "since_state"
+      ],
+      "input_optional": [
+        "max_changes"
+      ],
+      "output_fields": [
+        "created",
+        "destroyed",
+        "has_more_changes",
+        "state",
+        "updated"
+      ]
+    },
+    {
+      "tool": "download_attachment",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 3,
+      "output_properties": 4,
+      "output_defs": [],
+      "input_required": [
+        "blob_id",
+        "email_id"
+      ],
+      "input_optional": [
+        "name"
+      ],
+      "output_fields": [
+        "content_type",
+        "name",
+        "path",
+        "size_bytes"
+      ]
+    },
+    {
+      "tool": "upload_attachment",
+      "input_schema_valid": true,
+      "input_schema_error": null,
+      "output_schema_valid": true,
+      "output_schema_error": null,
+      "input_properties": 2,
+      "output_properties": 4,
+      "output_defs": [],
+      "input_required": [
+        "path"
+      ],
+      "input_optional": [
+        "name"
+      ],
+      "output_fields": [
+        "blob_id",
+        "content_type",
+        "name",
+        "size_bytes"
+      ]
+    }
+  ],
+  "schemas": {
+    "whoami": {
+      "input": {
+        "properties": {},
+        "title": "whoamiArguments",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output": {
+        "$defs": {
+          "EmailAddress": {
+            "description": "A mail address with an optional display name.",
+            "properties": {
+              "email": {
+                "description": "The address itself, e.g. 'user@example.com'.",
+                "title": "Email",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Display name shown for the address; null when the address carries none.",
+                "title": "Name"
+              }
+            },
+            "required": [
+              "email",
+              "name"
+            ],
+            "title": "EmailAddress",
+            "type": "object"
+          },
+          "Identity": {
+            "description": "A sender identity (an alias the account may send from).",
+            "properties": {
+              "id": {
+                "description": "JMAP identity id; pass it as from_identity_id in create_draft.",
+                "title": "Id",
+                "type": "string"
+              },
+              "email": {
+                "description": "The address of this identity.",
+                "title": "Email",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Display name of the identity; null when not set.",
+                "title": "Name"
+              },
+              "reply_to": {
+                "description": "Reply-to addresses of this identity; empty when the identity has none.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "Reply To",
+                "type": "array"
+              },
+              "is_default": {
+                "description": "True for the identity used when from_identity_id is not given.",
+                "title": "Is Default",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "name",
+              "reply_to",
+              "is_default"
+            ],
+            "title": "Identity",
+            "type": "object"
+          }
+        },
+        "description": "Result of whoami.",
+        "properties": {
+          "account_id": {
+            "description": "JMAP account id of the mail account.",
+            "title": "Account Id",
+            "type": "string"
+          },
+          "email": {
+            "description": "Primary address of the account (the default identity).",
+            "title": "Email",
+            "type": "string"
+          },
+          "identities": {
+            "description": "Sender identities of the account.",
+            "items": {
+              "$ref": "#/$defs/Identity"
+            },
+            "title": "Identities",
+            "type": "array"
+          },
+          "capabilities": {
+            "description": "JMAP capability URNs advertised by the server.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Capabilities",
+            "type": "array"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Current account state token; pass it to list_changes as since_state.",
+            "title": "State"
+          }
+        },
+        "required": [
+          "account_id",
+          "email",
+          "identities",
+          "capabilities",
+          "state"
+        ],
+        "title": "WhoamiResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "whoami",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 0,
+        "output_properties": 5,
+        "output_defs": [
+          "EmailAddress",
+          "Identity"
+        ],
+        "input_required": [],
+        "input_optional": [],
+        "output_fields": [
+          "account_id",
+          "capabilities",
+          "email",
+          "identities",
+          "state"
+        ]
+      }
+    },
+    "list_identities": {
+      "input": {
+        "properties": {},
+        "title": "list_identitiesArguments",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output": {
+        "$defs": {
+          "EmailAddress": {
+            "description": "A mail address with an optional display name.",
+            "properties": {
+              "email": {
+                "description": "The address itself, e.g. 'user@example.com'.",
+                "title": "Email",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Display name shown for the address; null when the address carries none.",
+                "title": "Name"
+              }
+            },
+            "required": [
+              "email",
+              "name"
+            ],
+            "title": "EmailAddress",
+            "type": "object"
+          },
+          "Identity": {
+            "description": "A sender identity (an alias the account may send from).",
+            "properties": {
+              "id": {
+                "description": "JMAP identity id; pass it as from_identity_id in create_draft.",
+                "title": "Id",
+                "type": "string"
+              },
+              "email": {
+                "description": "The address of this identity.",
+                "title": "Email",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Display name of the identity; null when not set.",
+                "title": "Name"
+              },
+              "reply_to": {
+                "description": "Reply-to addresses of this identity; empty when the identity has none.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "Reply To",
+                "type": "array"
+              },
+              "is_default": {
+                "description": "True for the identity used when from_identity_id is not given.",
+                "title": "Is Default",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "name",
+              "reply_to",
+              "is_default"
+            ],
+            "title": "Identity",
+            "type": "object"
+          }
+        },
+        "description": "Result of list_identities.",
+        "properties": {
+          "identities": {
+            "description": "Sender identities of the account.",
+            "items": {
+              "$ref": "#/$defs/Identity"
+            },
+            "title": "Identities",
+            "type": "array"
+          }
+        },
+        "required": [
+          "identities"
+        ],
+        "title": "IdentitiesResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "list_identities",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 0,
+        "output_properties": 1,
+        "output_defs": [
+          "EmailAddress",
+          "Identity"
+        ],
+        "input_required": [],
+        "input_optional": [],
+        "output_fields": [
+          "identities"
+        ]
+      }
+    },
+    "list_mailboxes": {
+      "input": {
+        "properties": {},
+        "title": "list_mailboxesArguments",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output": {
+        "$defs": {
+          "Mailbox": {
+            "description": "A mail folder.",
+            "properties": {
+              "id": {
+                "description": "JMAP mailbox id; stable only inside one session.",
+                "title": "Id",
+                "type": "string"
+              },
+              "name": {
+                "description": "Folder name as shown by the server.",
+                "title": "Name",
+                "type": "string"
+              },
+              "role": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "inbox",
+                      "drafts",
+                      "sent",
+                      "trash",
+                      "junk",
+                      "archive",
+                      "other"
+                    ],
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Well-known role of the folder; null when the folder has no role.",
+                "title": "Role"
+              },
+              "parent_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Id of the parent folder; null for top-level folders.",
+                "title": "Parent Id"
+              },
+              "total_emails": {
+                "description": "Number of messages in the folder, per the server counter.",
+                "title": "Total Emails",
+                "type": "integer"
+              },
+              "unread_emails": {
+                "description": "Number of unread messages in the folder.",
+                "title": "Unread Emails",
+                "type": "integer"
+              },
+              "sort_order": {
+                "description": "Server sort order of the folder inside its parent.",
+                "title": "Sort Order",
+                "type": "integer"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "role",
+              "parent_id",
+              "total_emails",
+              "unread_emails",
+              "sort_order"
+            ],
+            "title": "Mailbox",
+            "type": "object"
+          }
+        },
+        "description": "Result of list_mailboxes.",
+        "properties": {
+          "mailboxes": {
+            "description": "Folders of the account.",
+            "items": {
+              "$ref": "#/$defs/Mailbox"
+            },
+            "title": "Mailboxes",
+            "type": "array"
+          }
+        },
+        "required": [
+          "mailboxes"
+        ],
+        "title": "MailboxesResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "list_mailboxes",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 0,
+        "output_properties": 1,
+        "output_defs": [
+          "Mailbox"
+        ],
+        "input_required": [],
+        "input_optional": [],
+        "output_fields": [
+          "mailboxes"
+        ]
+      }
+    },
+    "list_emails": {
+      "input": {
+        "properties": {
+          "mailbox_role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "inbox",
+                  "drafts",
+                  "sent",
+                  "trash",
+                  "junk",
+                  "archive",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Folder role to read from; mutually exclusive with mailbox_id. Preferred over ids: roles are stable between sessions.",
+            "title": "Mailbox Role"
+          },
+          "mailbox_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Id of the folder to read from; mutually exclusive with mailbox_role.",
+            "title": "Mailbox Id"
+          },
+          "unread": {
+            "default": false,
+            "description": "True selects only unread messages; False (default) does not filter by read state.",
+            "title": "Unread",
+            "type": "boolean"
+          },
+          "flagged": {
+            "default": false,
+            "description": "True selects only flagged (starred) messages; False (default) does not filter by the flag.",
+            "title": "Flagged",
+            "type": "boolean"
+          },
+          "has_attachment": {
+            "default": false,
+            "description": "True selects only messages that carry a file; False (default) does not filter by attachments.",
+            "title": "Has Attachment",
+            "type": "boolean"
+          },
+          "after": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Only messages received after this moment (ISO 8601); null means no lower bound.",
+            "title": "After"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Only messages received before this moment (ISO 8601); null means no upper bound.",
+            "title": "Before"
+          },
+          "limit": {
+            "default": 20,
+            "description": "Maximum number of messages to return; the server may lower it further.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "position": {
+            "default": 0,
+            "description": "Offset in the result set; increase it by limit to read the next page.",
+            "minimum": 0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "sort": {
+            "default": "received_desc",
+            "description": "Order of the page: received_desc (newest first, default) or received_asc (oldest first).",
+            "enum": [
+              "received_desc",
+              "received_asc"
+            ],
+            "title": "Sort",
+            "type": "string"
+          }
+        },
+        "title": "list_emailsArguments",
+        "type": "object",
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "not": {
+              "required": [
+                "mailbox_role",
+                "mailbox_id"
+              ]
+            }
+          }
+        ]
+      },
+      "output": {
+        "$defs": {
+          "EmailAddress": {
+            "description": "A mail address with an optional display name.",
+            "properties": {
+              "email": {
+                "description": "The address itself, e.g. 'user@example.com'.",
+                "title": "Email",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Display name shown for the address; null when the address carries none.",
+                "title": "Name"
+              }
+            },
+            "required": [
+              "email",
+              "name"
+            ],
+            "title": "EmailAddress",
+            "type": "object"
+          },
+          "EmailSummary": {
+            "description": "Short summary of a message: headers, preview, keywords - no body.",
+            "properties": {
+              "id": {
+                "description": "JMAP email id; pass it to get_email.",
+                "title": "Id",
+                "type": "string"
+              },
+              "thread_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Id of the conversation; null when the message is not in a thread.",
+                "title": "Thread Id"
+              },
+              "subject": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Subject of the message; null when it has none.",
+                "title": "Subject"
+              },
+              "from": {
+                "description": "Sender addresses.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "From",
+                "type": "array"
+              },
+              "to": {
+                "description": "To recipients.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "To",
+                "type": "array"
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Date and time the message was received (ISO 8601, UTC).",
+                "title": "Date"
+              },
+              "preview": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Short plain-text excerpt of the body; null when the server has none.",
+                "title": "Preview"
+              },
+              "keywords": {
+                "description": "JMAP keywords of the message, e.g. '$seen', '$flagged', '$draft', '$answered'.",
+                "items": {
+                  "type": "string"
+                },
+                "title": "Keywords",
+                "type": "array"
+              },
+              "has_attachment": {
+                "description": "True when the message carries at least one attachment.",
+                "title": "Has Attachment",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "thread_id",
+              "subject",
+              "from",
+              "to",
+              "date",
+              "preview",
+              "keywords",
+              "has_attachment"
+            ],
+            "title": "EmailSummary",
+            "type": "object"
+          }
+        },
+        "description": "A page of message summaries.",
+        "properties": {
+          "emails": {
+            "description": "Messages of this page, newest first.",
+            "items": {
+              "$ref": "#/$defs/EmailSummary"
+            },
+            "title": "Emails",
+            "type": "array"
+          },
+          "total": {
+            "description": "Total number of messages matching the filter, not just this page.",
+            "title": "Total",
+            "type": "integer"
+          },
+          "has_more": {
+            "description": "True when more messages exist after this page.",
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "position": {
+            "description": "Offset of this page in the result set; pass it back to continue.",
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "emails",
+          "total",
+          "has_more",
+          "position"
+        ],
+        "title": "EmailPage",
+        "type": "object"
+      },
+      "row": {
+        "tool": "list_emails",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 10,
+        "output_properties": 4,
+        "output_defs": [
+          "EmailAddress",
+          "EmailSummary"
+        ],
+        "input_required": [],
+        "input_optional": [
+          "after",
+          "before",
+          "flagged",
+          "has_attachment",
+          "limit",
+          "mailbox_id",
+          "mailbox_role",
+          "position",
+          "sort",
+          "unread"
+        ],
+        "output_fields": [
+          "emails",
+          "has_more",
+          "position",
+          "total"
+        ]
+      }
+    },
+    "search_emails": {
+      "input": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Free-text search over headers and body. Needs the server's full-text index: if the server has none, the call fails with an explicit error instead of returning partial results - use subject/from_address/to_address then.",
+            "title": "Text"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Substring to look for in the Subject header.",
+            "title": "Subject"
+          },
+          "from_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Substring to look for in the From header (address or display name).",
+            "title": "From Address"
+          },
+          "to_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Substring to look for in the To header (Cc and Bcc are not searched).",
+            "title": "To Address"
+          },
+          "mailbox_role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "inbox",
+                  "drafts",
+                  "sent",
+                  "trash",
+                  "junk",
+                  "archive",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Folder role to read from; mutually exclusive with mailbox_id. Preferred over ids: roles are stable between sessions.",
+            "title": "Mailbox Role"
+          },
+          "mailbox_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Id of the folder to read from; mutually exclusive with mailbox_role.",
+            "title": "Mailbox Id"
+          },
+          "unread": {
+            "default": false,
+            "description": "True selects only unread messages; False (default) does not filter by read state.",
+            "title": "Unread",
+            "type": "boolean"
+          },
+          "flagged": {
+            "default": false,
+            "description": "True selects only flagged (starred) messages; False (default) does not filter by the flag.",
+            "title": "Flagged",
+            "type": "boolean"
+          },
+          "has_attachment": {
+            "default": false,
+            "description": "True selects only messages that carry a file; False (default) does not filter by attachments.",
+            "title": "Has Attachment",
+            "type": "boolean"
+          },
+          "after": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Only messages received after this moment (ISO 8601); null means no lower bound.",
+            "title": "After"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Only messages received before this moment (ISO 8601); null means no upper bound.",
+            "title": "Before"
+          },
+          "limit": {
+            "default": 20,
+            "description": "Maximum number of messages to return; the server may lower it further.",
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "position": {
+            "default": 0,
+            "description": "Offset in the result set; increase it by limit to read the next page.",
+            "minimum": 0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "sort": {
+            "default": "received_desc",
+            "description": "Order of the page: received_desc (newest first, default) or received_asc (oldest first).",
+            "enum": [
+              "received_desc",
+              "received_asc"
+            ],
+            "title": "Sort",
+            "type": "string"
+          }
+        },
+        "title": "search_emailsArguments",
+        "type": "object",
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "not": {
+              "required": [
+                "mailbox_role",
+                "mailbox_id"
+              ]
+            }
+          }
+        ]
+      },
+      "output": {
+        "$defs": {
+          "EmailAddress": {
+            "description": "A mail address with an optional display name.",
+            "properties": {
+              "email": {
+                "description": "The address itself, e.g. 'user@example.com'.",
+                "title": "Email",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Display name shown for the address; null when the address carries none.",
+                "title": "Name"
+              }
+            },
+            "required": [
+              "email",
+              "name"
+            ],
+            "title": "EmailAddress",
+            "type": "object"
+          },
+          "EmailSummary": {
+            "description": "Short summary of a message: headers, preview, keywords - no body.",
+            "properties": {
+              "id": {
+                "description": "JMAP email id; pass it to get_email.",
+                "title": "Id",
+                "type": "string"
+              },
+              "thread_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Id of the conversation; null when the message is not in a thread.",
+                "title": "Thread Id"
+              },
+              "subject": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Subject of the message; null when it has none.",
+                "title": "Subject"
+              },
+              "from": {
+                "description": "Sender addresses.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "From",
+                "type": "array"
+              },
+              "to": {
+                "description": "To recipients.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "To",
+                "type": "array"
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Date and time the message was received (ISO 8601, UTC).",
+                "title": "Date"
+              },
+              "preview": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Short plain-text excerpt of the body; null when the server has none.",
+                "title": "Preview"
+              },
+              "keywords": {
+                "description": "JMAP keywords of the message, e.g. '$seen', '$flagged', '$draft', '$answered'.",
+                "items": {
+                  "type": "string"
+                },
+                "title": "Keywords",
+                "type": "array"
+              },
+              "has_attachment": {
+                "description": "True when the message carries at least one attachment.",
+                "title": "Has Attachment",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "thread_id",
+              "subject",
+              "from",
+              "to",
+              "date",
+              "preview",
+              "keywords",
+              "has_attachment"
+            ],
+            "title": "EmailSummary",
+            "type": "object"
+          }
+        },
+        "description": "A page of message summaries.",
+        "properties": {
+          "emails": {
+            "description": "Messages of this page, newest first.",
+            "items": {
+              "$ref": "#/$defs/EmailSummary"
+            },
+            "title": "Emails",
+            "type": "array"
+          },
+          "total": {
+            "description": "Total number of messages matching the filter, not just this page.",
+            "title": "Total",
+            "type": "integer"
+          },
+          "has_more": {
+            "description": "True when more messages exist after this page.",
+            "title": "Has More",
+            "type": "boolean"
+          },
+          "position": {
+            "description": "Offset of this page in the result set; pass it back to continue.",
+            "title": "Position",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "emails",
+          "total",
+          "has_more",
+          "position"
+        ],
+        "title": "EmailPage",
+        "type": "object"
+      },
+      "row": {
+        "tool": "search_emails",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 14,
+        "output_properties": 4,
+        "output_defs": [
+          "EmailAddress",
+          "EmailSummary"
+        ],
+        "input_required": [],
+        "input_optional": [
+          "after",
+          "before",
+          "flagged",
+          "from_address",
+          "has_attachment",
+          "limit",
+          "mailbox_id",
+          "mailbox_role",
+          "position",
+          "sort",
+          "subject",
+          "text",
+          "to_address",
+          "unread"
+        ],
+        "output_fields": [
+          "emails",
+          "has_more",
+          "position",
+          "total"
+        ]
+      }
+    },
+    "count_emails": {
+      "input": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Free-text search over headers and body. Needs the server's full-text index: if the server has none, the call fails with an explicit error instead of returning partial results.",
+            "title": "Text"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Substring to look for in the Subject header.",
+            "title": "Subject"
+          },
+          "from_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Substring to look for in the From header (address or display name).",
+            "title": "From Address"
+          },
+          "to_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Substring to look for in the To header (Cc and Bcc are not searched).",
+            "title": "To Address"
+          },
+          "mailbox_role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "inbox",
+                  "drafts",
+                  "sent",
+                  "trash",
+                  "junk",
+                  "archive",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Folder role to read from; mutually exclusive with mailbox_id. Preferred over ids: roles are stable between sessions.",
+            "title": "Mailbox Role"
+          },
+          "mailbox_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Id of the folder to read from; mutually exclusive with mailbox_role.",
+            "title": "Mailbox Id"
+          },
+          "unread": {
+            "default": false,
+            "description": "True selects only unread messages; False (default) does not filter by read state.",
+            "title": "Unread",
+            "type": "boolean"
+          },
+          "flagged": {
+            "default": false,
+            "description": "True selects only flagged (starred) messages; False (default) does not filter by the flag.",
+            "title": "Flagged",
+            "type": "boolean"
+          },
+          "has_attachment": {
+            "default": false,
+            "description": "True selects only messages that carry a file; False (default) does not filter by attachments.",
+            "title": "Has Attachment",
+            "type": "boolean"
+          },
+          "after": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Only messages received after this moment (ISO 8601); null means no lower bound.",
+            "title": "After"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Only messages received before this moment (ISO 8601); null means no upper bound.",
+            "title": "Before"
+          }
+        },
+        "title": "count_emailsArguments",
+        "type": "object",
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "not": {
+              "required": [
+                "mailbox_role",
+                "mailbox_id"
+              ]
+            }
+          }
+        ]
+      },
+      "output": {
+        "description": "Result of count_emails.",
+        "properties": {
+          "count": {
+            "description": "Number of messages matching the filter.",
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count"
+        ],
+        "title": "EmailCount",
+        "type": "object"
+      },
+      "row": {
+        "tool": "count_emails",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 11,
+        "output_properties": 1,
+        "output_defs": [],
+        "input_required": [],
+        "input_optional": [
+          "after",
+          "before",
+          "flagged",
+          "from_address",
+          "has_attachment",
+          "mailbox_id",
+          "mailbox_role",
+          "subject",
+          "text",
+          "to_address",
+          "unread"
+        ],
+        "output_fields": [
+          "count"
+        ]
+      }
+    },
+    "get_email": {
+      "input": {
+        "properties": {
+          "email_id": {
+            "description": "Id of the message to read; take it from list_emails, search_emails or get_thread.",
+            "title": "Email Id",
+            "type": "string"
+          },
+          "max_body_chars": {
+            "default": 20000,
+            "description": "Maximum number of characters of the body to return; the server may lower it further.",
+            "maximum": 100000,
+            "minimum": 200,
+            "title": "Max Body Chars",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "email_id"
+        ],
+        "title": "get_emailArguments",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output": {
+        "$defs": {
+          "Attachment": {
+            "description": "Metadata of one attachment of a message.",
+            "properties": {
+              "blob_id": {
+                "description": "Blob id of the file; pass it to download_attachment.",
+                "title": "Blob Id",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "File name as declared by the sender; null when absent.",
+                "title": "Name"
+              },
+              "type": {
+                "description": "MIME type of the file, e.g. 'application/pdf'.",
+                "title": "Type",
+                "type": "string"
+              },
+              "size": {
+                "description": "Size of the file in bytes.",
+                "title": "Size",
+                "type": "integer"
+              },
+              "is_inline": {
+                "description": "True for files shown inside the body (inline images) rather than as attachments.",
+                "title": "Is Inline",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "blob_id",
+              "name",
+              "type",
+              "size",
+              "is_inline"
+            ],
+            "title": "Attachment",
+            "type": "object"
+          },
+          "EmailAddress": {
+            "description": "A mail address with an optional display name.",
+            "properties": {
+              "email": {
+                "description": "The address itself, e.g. 'user@example.com'.",
+                "title": "Email",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Display name shown for the address; null when the address carries none.",
+                "title": "Name"
+              }
+            },
+            "required": [
+              "email",
+              "name"
+            ],
+            "title": "EmailAddress",
+            "type": "object"
+          }
+        },
+        "description": "One message: headers, plain-text body, keywords and attachment metadata.",
+        "properties": {
+          "id": {
+            "description": "JMAP email id.",
+            "title": "Id",
+            "type": "string"
+          },
+          "thread_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Id of the conversation; null when the message is not in a thread.",
+            "title": "Thread Id"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Subject of the message; null when it has none.",
+            "title": "Subject"
+          },
+          "from": {
+            "description": "Sender addresses.",
+            "items": {
+              "$ref": "#/$defs/EmailAddress"
+            },
+            "title": "From",
+            "type": "array"
+          },
+          "to": {
+            "description": "To recipients.",
+            "items": {
+              "$ref": "#/$defs/EmailAddress"
+            },
+            "title": "To",
+            "type": "array"
+          },
+          "cc": {
+            "description": "Cc recipients; empty when there are none.",
+            "items": {
+              "$ref": "#/$defs/EmailAddress"
+            },
+            "title": "Cc",
+            "type": "array"
+          },
+          "bcc": {
+            "description": "Bcc recipients; usually empty for received mail.",
+            "items": {
+              "$ref": "#/$defs/EmailAddress"
+            },
+            "title": "Bcc",
+            "type": "array"
+          },
+          "reply_to": {
+            "description": "Reply-to addresses; empty when the message has none.",
+            "items": {
+              "$ref": "#/$defs/EmailAddress"
+            },
+            "title": "Reply To",
+            "type": "array"
+          },
+          "date": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Date and time the message was received (ISO 8601, UTC).",
+            "title": "Date"
+          },
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "RFC 5322 Message-ID header; null when absent.",
+            "title": "Message Id"
+          },
+          "in_reply_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Message-ID of the message this one replies to; null when it is not a reply.",
+            "title": "In Reply To"
+          },
+          "preview": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Short plain-text excerpt of the body; null when the server has none.",
+            "title": "Preview"
+          },
+          "text_body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Body as plain text (HTML converted); null when no body was requested or the message has none.",
+            "title": "Text Body"
+          },
+          "truncated": {
+            "description": "True when the body was cut at max_body_chars.",
+            "title": "Truncated",
+            "type": "boolean"
+          },
+          "keywords": {
+            "description": "JMAP keywords of the message, e.g. '$seen', '$flagged', '$draft', '$answered'.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Keywords",
+            "type": "array"
+          },
+          "attachments": {
+            "description": "Attachments of the message; empty when there are none.",
+            "items": {
+              "$ref": "#/$defs/Attachment"
+            },
+            "title": "Attachments",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "thread_id",
+          "subject",
+          "from",
+          "to",
+          "cc",
+          "bcc",
+          "reply_to",
+          "date",
+          "message_id",
+          "in_reply_to",
+          "preview",
+          "text_body",
+          "truncated",
+          "keywords",
+          "attachments"
+        ],
+        "title": "EmailDetail",
+        "type": "object"
+      },
+      "row": {
+        "tool": "get_email",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 2,
+        "output_properties": 16,
+        "output_defs": [
+          "Attachment",
+          "EmailAddress"
+        ],
+        "input_required": [
+          "email_id"
+        ],
+        "input_optional": [
+          "max_body_chars"
+        ],
+        "output_fields": [
+          "attachments",
+          "bcc",
+          "cc",
+          "date",
+          "from",
+          "id",
+          "in_reply_to",
+          "keywords",
+          "message_id",
+          "preview",
+          "reply_to",
+          "subject",
+          "text_body",
+          "thread_id",
+          "to",
+          "truncated"
+        ]
+      }
+    },
+    "get_thread": {
+      "input": {
+        "properties": {
+          "thread_id": {
+            "description": "Id of the conversation; take it from list_emails, search_emails or get_email.",
+            "title": "Thread Id",
+            "type": "string"
+          },
+          "include_bodies": {
+            "default": false,
+            "description": "True also returns the text body of every message; False (default) returns previews only.",
+            "title": "Include Bodies",
+            "type": "boolean"
+          },
+          "max_body_chars": {
+            "default": 4000,
+            "description": "Maximum number of characters of the body per message (used only when include_bodies is true); the server may lower it further.",
+            "maximum": 100000,
+            "minimum": 200,
+            "title": "Max Body Chars",
+            "type": "integer"
+          },
+          "max_messages": {
+            "default": 20,
+            "description": "Maximum number of messages to return; when the conversation is longer the newest messages are kept.",
+            "maximum": 50,
+            "minimum": 1,
+            "title": "Max Messages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "thread_id"
+        ],
+        "title": "get_threadArguments",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output": {
+        "$defs": {
+          "Attachment": {
+            "description": "Metadata of one attachment of a message.",
+            "properties": {
+              "blob_id": {
+                "description": "Blob id of the file; pass it to download_attachment.",
+                "title": "Blob Id",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "File name as declared by the sender; null when absent.",
+                "title": "Name"
+              },
+              "type": {
+                "description": "MIME type of the file, e.g. 'application/pdf'.",
+                "title": "Type",
+                "type": "string"
+              },
+              "size": {
+                "description": "Size of the file in bytes.",
+                "title": "Size",
+                "type": "integer"
+              },
+              "is_inline": {
+                "description": "True for files shown inside the body (inline images) rather than as attachments.",
+                "title": "Is Inline",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "blob_id",
+              "name",
+              "type",
+              "size",
+              "is_inline"
+            ],
+            "title": "Attachment",
+            "type": "object"
+          },
+          "EmailAddress": {
+            "description": "A mail address with an optional display name.",
+            "properties": {
+              "email": {
+                "description": "The address itself, e.g. 'user@example.com'.",
+                "title": "Email",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Display name shown for the address; null when the address carries none.",
+                "title": "Name"
+              }
+            },
+            "required": [
+              "email",
+              "name"
+            ],
+            "title": "EmailAddress",
+            "type": "object"
+          },
+          "EmailDetail": {
+            "description": "One message: headers, plain-text body, keywords and attachment metadata.",
+            "properties": {
+              "id": {
+                "description": "JMAP email id.",
+                "title": "Id",
+                "type": "string"
+              },
+              "thread_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Id of the conversation; null when the message is not in a thread.",
+                "title": "Thread Id"
+              },
+              "subject": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Subject of the message; null when it has none.",
+                "title": "Subject"
+              },
+              "from": {
+                "description": "Sender addresses.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "From",
+                "type": "array"
+              },
+              "to": {
+                "description": "To recipients.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "To",
+                "type": "array"
+              },
+              "cc": {
+                "description": "Cc recipients; empty when there are none.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "Cc",
+                "type": "array"
+              },
+              "bcc": {
+                "description": "Bcc recipients; usually empty for received mail.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "Bcc",
+                "type": "array"
+              },
+              "reply_to": {
+                "description": "Reply-to addresses; empty when the message has none.",
+                "items": {
+                  "$ref": "#/$defs/EmailAddress"
+                },
+                "title": "Reply To",
+                "type": "array"
+              },
+              "date": {
+                "anyOf": [
+                  {
+                    "format": "date-time",
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Date and time the message was received (ISO 8601, UTC).",
+                "title": "Date"
+              },
+              "message_id": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "RFC 5322 Message-ID header; null when absent.",
+                "title": "Message Id"
+              },
+              "in_reply_to": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Message-ID of the message this one replies to; null when it is not a reply.",
+                "title": "In Reply To"
+              },
+              "preview": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Short plain-text excerpt of the body; null when the server has none.",
+                "title": "Preview"
+              },
+              "text_body": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Body as plain text (HTML converted); null when no body was requested or the message has none.",
+                "title": "Text Body"
+              },
+              "truncated": {
+                "description": "True when the body was cut at max_body_chars.",
+                "title": "Truncated",
+                "type": "boolean"
+              },
+              "keywords": {
+                "description": "JMAP keywords of the message, e.g. '$seen', '$flagged', '$draft', '$answered'.",
+                "items": {
+                  "type": "string"
+                },
+                "title": "Keywords",
+                "type": "array"
+              },
+              "attachments": {
+                "description": "Attachments of the message; empty when there are none.",
+                "items": {
+                  "$ref": "#/$defs/Attachment"
+                },
+                "title": "Attachments",
+                "type": "array"
+              }
+            },
+            "required": [
+              "id",
+              "thread_id",
+              "subject",
+              "from",
+              "to",
+              "cc",
+              "bcc",
+              "reply_to",
+              "date",
+              "message_id",
+              "in_reply_to",
+              "preview",
+              "text_body",
+              "truncated",
+              "keywords",
+              "attachments"
+            ],
+            "title": "EmailDetail",
+            "type": "object"
+          }
+        },
+        "description": "Result of get_thread.",
+        "properties": {
+          "thread_id": {
+            "description": "Id of the conversation.",
+            "title": "Thread Id",
+            "type": "string"
+          },
+          "subject": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Subject of the conversation (subject of its first message).",
+            "title": "Subject"
+          },
+          "message_count": {
+            "description": "Total number of messages in the conversation.",
+            "title": "Message Count",
+            "type": "integer"
+          },
+          "emails": {
+            "description": "Messages of the conversation, oldest first.",
+            "items": {
+              "$ref": "#/$defs/EmailDetail"
+            },
+            "title": "Emails",
+            "type": "array"
+          }
+        },
+        "required": [
+          "thread_id",
+          "subject",
+          "message_count",
+          "emails"
+        ],
+        "title": "ThreadResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "get_thread",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 4,
+        "output_properties": 4,
+        "output_defs": [
+          "Attachment",
+          "EmailAddress",
+          "EmailDetail"
+        ],
+        "input_required": [
+          "thread_id"
+        ],
+        "input_optional": [
+          "include_bodies",
+          "max_body_chars",
+          "max_messages"
+        ],
+        "output_fields": [
+          "emails",
+          "message_count",
+          "subject",
+          "thread_id"
+        ]
+      }
+    },
+    "set_flags": {
+      "input": {
+        "properties": {
+          "ids": {
+            "description": "Ids of the messages to change; 1 to 100 ids per call.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          },
+          "seen": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "True marks the messages as read, False marks them as unread; null leaves the read state alone.",
+            "title": "Seen"
+          },
+          "flagged": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "True stars the messages, False removes the star; null leaves the flag alone.",
+            "title": "Flagged"
+          },
+          "answered": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "True marks the messages as answered, False clears the mark; null leaves it alone.",
+            "title": "Answered"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "set_flagsArguments",
+        "type": "object",
+        "additionalProperties": false,
+        "anyOf": [
+          {
+            "required": [
+              "seen"
+            ],
+            "properties": {
+              "seen": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "required": [
+              "flagged"
+            ],
+            "properties": {
+              "flagged": {
+                "type": "boolean"
+              }
+            }
+          },
+          {
+            "required": [
+              "answered"
+            ],
+            "properties": {
+              "answered": {
+                "type": "boolean"
+              }
+            }
+          }
+        ]
+      },
+      "output": {
+        "description": "Result of set_flags.",
+        "properties": {
+          "updated": {
+            "description": "Ids of the messages whose flags were changed.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Updated",
+            "type": "array"
+          },
+          "not_found": {
+            "description": "Ids that do not exist in this account.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Not Found",
+            "type": "array"
+          }
+        },
+        "required": [
+          "updated",
+          "not_found"
+        ],
+        "title": "FlagUpdateResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "set_flags",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 4,
+        "output_properties": 2,
+        "output_defs": [],
+        "input_required": [
+          "ids"
+        ],
+        "input_optional": [
+          "answered",
+          "flagged",
+          "seen"
+        ],
+        "output_fields": [
+          "not_found",
+          "updated"
+        ]
+      }
+    },
+    "move_emails": {
+      "input": {
+        "properties": {
+          "ids": {
+            "description": "Ids of the messages to move; 1 to 100 ids per call.",
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          },
+          "mailbox_role": {
+            "anyOf": [
+              {
+                "enum": [
+                  "inbox",
+                  "drafts",
+                  "sent",
+                  "trash",
+                  "junk",
+                  "archive",
+                  "other"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Folder role to move the messages to; mutually exclusive with mailbox_id. Exactly one target is required.",
+            "title": "Mailbox Role"
+          },
+          "mailbox_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Id of the folder to move the messages to; mutually exclusive with mailbox_role. Exactly one target is required.",
+            "title": "Mailbox Id"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "move_emailsArguments",
+        "type": "object",
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "not": {
+              "required": [
+                "mailbox_role",
+                "mailbox_id"
+              ]
+            }
+          }
+        ],
+        "anyOf": [
+          {
+            "required": [
+              "mailbox_role"
+            ],
+            "properties": {
+              "mailbox_role": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "required": [
+              "mailbox_id"
+            ],
+            "properties": {
+              "mailbox_id": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "output": {
+        "description": "Result of move_emails.",
+        "properties": {
+          "moved": {
+            "description": "Ids of the messages that were moved.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Moved",
+            "type": "array"
+          },
+          "not_found": {
+            "description": "Ids that do not exist in this account.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Not Found",
+            "type": "array"
+          }
+        },
+        "required": [
+          "moved",
+          "not_found"
+        ],
+        "title": "MoveResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "move_emails",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 3,
+        "output_properties": 2,
+        "output_defs": [],
+        "input_required": [
+          "ids"
+        ],
+        "input_optional": [
+          "mailbox_id",
+          "mailbox_role"
+        ],
+        "output_fields": [
+          "moved",
+          "not_found"
+        ]
+      }
+    },
+    "create_draft": {
+      "input": {
+        "$defs": {
+          "AttachmentRef": {
+            "description": "Reference to an already uploaded attachment.",
+            "properties": {
+              "blob_id": {
+                "description": "Blob id returned by upload_attachment.",
+                "title": "Blob Id",
+                "type": "string"
+              }
+            },
+            "required": [
+              "blob_id"
+            ],
+            "title": "AttachmentRef",
+            "type": "object"
+          }
+        },
+        "properties": {
+          "to": {
+            "description": "Recipients of the draft; at least one address.",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "To",
+            "type": "array"
+          },
+          "subject": {
+            "description": "Subject of the draft.",
+            "title": "Subject",
+            "type": "string"
+          },
+          "body": {
+            "description": "Plain-text body of the draft.",
+            "title": "Body",
+            "type": "string"
+          },
+          "cc": {
+            "default": [],
+            "description": "Cc recipients; empty means no Cc.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Cc",
+            "type": "array"
+          },
+          "bcc": {
+            "default": [],
+            "description": "Bcc recipients; empty means no Bcc.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Bcc",
+            "type": "array"
+          },
+          "body_html": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "HTML alternative of the body; null means only the plain-text body is sent.",
+            "title": "Body Html"
+          },
+          "from_identity_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Id of the sender identity (see list_identities); null uses the default identity.",
+            "title": "From Identity Id"
+          },
+          "in_reply_to": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Id of the message being replied to; the tool sets In-Reply-To/References and prefixes the subject with 'Re:'.",
+            "title": "In Reply To"
+          },
+          "attachments": {
+            "default": [],
+            "description": "Files to attach, by blob_id from upload_attachment; empty means no attachment.",
+            "items": {
+              "$ref": "#/$defs/AttachmentRef"
+            },
+            "title": "Attachments",
+            "type": "array"
+          }
+        },
+        "required": [
+          "to",
+          "subject",
+          "body"
+        ],
+        "title": "create_draftArguments",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output": {
+        "description": "Result of create_draft.",
+        "properties": {
+          "draft_id": {
+            "description": "Id of the created draft; pass it to send_draft.",
+            "title": "Draft Id",
+            "type": "string"
+          },
+          "thread_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Id of the conversation the draft belongs to; null when the server reports none.",
+            "title": "Thread Id"
+          }
+        },
+        "required": [
+          "draft_id",
+          "thread_id"
+        ],
+        "title": "DraftResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "create_draft",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 9,
+        "output_properties": 2,
+        "output_defs": [],
+        "input_required": [
+          "body",
+          "subject",
+          "to"
+        ],
+        "input_optional": [
+          "attachments",
+          "bcc",
+          "body_html",
+          "cc",
+          "from_identity_id",
+          "in_reply_to"
+        ],
+        "output_fields": [
+          "draft_id",
+          "thread_id"
+        ]
+      }
+    },
+    "send_draft": {
+      "input": {
+        "properties": {
+          "draft_id": {
+            "description": "Id of the draft to send; take it from create_draft or from list_emails on the 'drafts' role.",
+            "title": "Draft Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "draft_id"
+        ],
+        "title": "send_draftArguments",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output": {
+        "$defs": {
+          "EmailAddress": {
+            "description": "A mail address with an optional display name.",
+            "properties": {
+              "email": {
+                "description": "The address itself, e.g. 'user@example.com'.",
+                "title": "Email",
+                "type": "string"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Display name shown for the address; null when the address carries none.",
+                "title": "Name"
+              }
+            },
+            "required": [
+              "email",
+              "name"
+            ],
+            "title": "EmailAddress",
+            "type": "object"
+          }
+        },
+        "description": "Result of send_draft.",
+        "properties": {
+          "message_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "RFC 5322 Message-ID of the sent message; null when the server reports none.",
+            "title": "Message Id"
+          },
+          "sent_at": {
+            "description": "Moment the message was handed over for delivery (ISO 8601, UTC).",
+            "format": "date-time",
+            "title": "Sent At",
+            "type": "string"
+          },
+          "recipients": {
+            "description": "All recipients of the sent message: To, then Cc, then Bcc.",
+            "items": {
+              "$ref": "#/$defs/EmailAddress"
+            },
+            "title": "Recipients",
+            "type": "array"
+          }
+        },
+        "required": [
+          "message_id",
+          "sent_at",
+          "recipients"
+        ],
+        "title": "SendResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "send_draft",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 1,
+        "output_properties": 3,
+        "output_defs": [
+          "EmailAddress"
+        ],
+        "input_required": [
+          "draft_id"
+        ],
+        "input_optional": [],
+        "output_fields": [
+          "message_id",
+          "recipients",
+          "sent_at"
+        ]
+      }
+    },
+    "list_changes": {
+      "input": {
+        "properties": {
+          "since_state": {
+            "description": "Account state token to compare against; take it from whoami or from a previous list_changes answer.",
+            "title": "Since State",
+            "type": "string"
+          },
+          "max_changes": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Maximum number of changes to return; null lets the server decide.",
+            "title": "Max Changes"
+          }
+        },
+        "required": [
+          "since_state"
+        ],
+        "title": "list_changesArguments",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output": {
+        "description": "Result of list_changes.",
+        "properties": {
+          "created": {
+            "description": "Ids of messages created since the given state.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Created",
+            "type": "array"
+          },
+          "updated": {
+            "description": "Ids of messages updated since the given state.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Updated",
+            "type": "array"
+          },
+          "destroyed": {
+            "description": "Ids of messages deleted since the given state.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Destroyed",
+            "type": "array"
+          },
+          "state": {
+            "description": "New current account state token; keep it for the next call.",
+            "title": "State",
+            "type": "string"
+          },
+          "has_more_changes": {
+            "description": "True when more changes exist after this batch.",
+            "title": "Has More Changes",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "created",
+          "updated",
+          "destroyed",
+          "state",
+          "has_more_changes"
+        ],
+        "title": "ChangesResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "list_changes",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 2,
+        "output_properties": 5,
+        "output_defs": [],
+        "input_required": [
+          "since_state"
+        ],
+        "input_optional": [
+          "max_changes"
+        ],
+        "output_fields": [
+          "created",
+          "destroyed",
+          "has_more_changes",
+          "state",
+          "updated"
+        ]
+      }
+    },
+    "download_attachment": {
+      "input": {
+        "properties": {
+          "email_id": {
+            "description": "Id of the message that carries the attachment; take it from get_email or get_thread.",
+            "title": "Email Id",
+            "type": "string"
+          },
+          "blob_id": {
+            "description": "Id of the attachment itself; take it from the attachments list of get_email or get_thread.",
+            "title": "Blob Id",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "File name to save the attachment under; null uses the name the sender gave.",
+            "title": "Name"
+          }
+        },
+        "required": [
+          "email_id",
+          "blob_id"
+        ],
+        "title": "download_attachmentArguments",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output": {
+        "description": "Result of download_attachment.",
+        "properties": {
+          "path": {
+            "description": "Absolute path of the written file on the server.",
+            "title": "Path",
+            "type": "string"
+          },
+          "name": {
+            "description": "File name as written on the server.",
+            "title": "Name",
+            "type": "string"
+          },
+          "size_bytes": {
+            "description": "Size of the written file in bytes.",
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "content_type": {
+            "description": "MIME type of the file.",
+            "title": "Content Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "name",
+          "size_bytes",
+          "content_type"
+        ],
+        "title": "DownloadResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "download_attachment",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 3,
+        "output_properties": 4,
+        "output_defs": [],
+        "input_required": [
+          "blob_id",
+          "email_id"
+        ],
+        "input_optional": [
+          "name"
+        ],
+        "output_fields": [
+          "content_type",
+          "name",
+          "path",
+          "size_bytes"
+        ]
+      }
+    },
+    "upload_attachment": {
+      "input": {
+        "properties": {
+          "path": {
+            "description": "Path of the file on the server; it must be inside the allowed roots, anything else is refused.",
+            "title": "Path",
+            "type": "string"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "File name to send to the server; null uses the name of the file on disk.",
+            "title": "Name"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "upload_attachmentArguments",
+        "type": "object",
+        "additionalProperties": false
+      },
+      "output": {
+        "description": "Result of upload_attachment.",
+        "properties": {
+          "blob_id": {
+            "description": "Blob id of the uploaded file; pass it to create_draft.",
+            "title": "Blob Id",
+            "type": "string"
+          },
+          "name": {
+            "description": "File name sent to the server.",
+            "title": "Name",
+            "type": "string"
+          },
+          "size_bytes": {
+            "description": "Size of the uploaded file in bytes.",
+            "title": "Size Bytes",
+            "type": "integer"
+          },
+          "content_type": {
+            "description": "MIME type of the uploaded file.",
+            "title": "Content Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "blob_id",
+          "name",
+          "size_bytes",
+          "content_type"
+        ],
+        "title": "UploadResult",
+        "type": "object"
+      },
+      "row": {
+        "tool": "upload_attachment",
+        "input_schema_valid": true,
+        "input_schema_error": null,
+        "output_schema_valid": true,
+        "output_schema_error": null,
+        "input_properties": 2,
+        "output_properties": 4,
+        "output_defs": [],
+        "input_required": [
+          "path"
+        ],
+        "input_optional": [
+          "name"
+        ],
+        "output_fields": [
+          "blob_id",
+          "content_type",
+          "name",
+          "size_bytes"
+        ]
+      }
+    }
+  }
+}
