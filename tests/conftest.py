@@ -4,15 +4,20 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Callable
 
 import httpx
 import pytest
 
 from src.config import Settings, StalwartSettings
+from src.mcp import auth, tools
+from src.mcp.jmap import JmapClient
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCS = REPO_ROOT / "docs"
+
+BARE = "starlight-api-key"
 
 SESSION_DOCUMENT: dict[str, Any] = {
     "capabilities": {
@@ -86,3 +91,141 @@ def load_published_schema(tool: str, kind: str) -> dict[str, Any]:
     if block.endswith("```"):
         block = block[: -len("```")]
     return json.loads(block.strip())
+
+
+def jmap_error(error_type: str, code: str = "", description: str = "") -> dict[str, Any]:
+    """An error answer of a JMAP method (the error arrives inside HTTP 200)."""
+    return {
+        "__error__": {
+            "type": f"urn:ietf:params:jmap:error:{error_type}",
+            "code": code or error_type,
+            "description": description,
+        }
+    }
+
+
+def jmap_calls(seen: list[Any], method: str) -> list[dict]:
+    """The arguments of every call of the method the mock transport saw."""
+    found: list[dict] = []
+    for request in seen:
+        if request.method != "POST" or not request.content:
+            continue
+        body = json.loads(request.content)
+        for name, args, _call_id in body.get("methodCalls", []):
+            if name == method:
+                found.append(args)
+    return found
+
+
+@pytest.fixture
+def bearer() -> Any:
+    """The bearer of the request being served."""
+    marker = auth.set_bearer(BARE)
+    yield BARE
+    auth.reset_bearer(marker)
+
+
+@pytest.fixture
+def mock_jmap(
+    settings: Settings,
+    make_transport: Callable[[Callable[[httpx.Request], httpx.Response]], tuple[httpx.MockTransport, list[httpx.Request]]],
+    monkeypatch: Any,
+) -> Callable[..., list[httpx.Request]]:
+    """A mock JMAP upstream.
+
+    ``mock_jmap({"Email/query": {...}})`` installs it and returns the list of
+    the requests it saw. The value of a method is its answer; a list of values
+    is a queue of answers (one per call), which is how the fallbacks are
+    tested. A method without an answer gets an ``unknownMethod`` error.
+
+    ``blobs`` answers the blob endpoints of the session document: ``upload``
+    (the JSON body of the upload answer) and ``download`` (the bytes of the
+    file, or a ``(bytes, content-type)`` pair).
+    """
+
+    def build(
+        answers: dict[str, Any],
+        state: str | None = None,
+        blobs: dict[str, Any] | None = None,
+        client_settings: Settings | None = None,
+    ) -> list[httpx.Request]:
+        queues = {name: list(value) for name, value in answers.items() if isinstance(value, list)}
+        blobs = blobs or {}
+
+        def handler(request: httpx.Request) -> httpx.Response:
+            path = request.url.path
+            if request.method == "GET":
+                if "/download" in path:
+                    answer = blobs.get("download", b"")
+                    if isinstance(answer, tuple):
+                        content, content_type = answer
+                        return httpx.Response(
+                            200, content=content, headers={"content-type": content_type}
+                        )
+                    return httpx.Response(200, content=answer)
+                return httpx.Response(200, json=SESSION_DOCUMENT)
+            if request.method == "POST" and "/upload" in path:
+                return httpx.Response(200, json=blobs.get("upload", {"blobId": "blob-1"}))
+            body = json.loads(request.content)
+            responses: list[list[Any]] = []
+            for name, _args, call_id in body.get("methodCalls", []):
+                queue = queues.get(name)
+                if queue is not None:
+                    answer = queue.pop(0) if queue else None
+                else:
+                    answer = answers.get(name)
+                if answer is None:
+                    responses.append(
+                        [
+                            "error",
+                            {
+                                "type": "urn:ietf:params:jmap:error:unknownMethod",
+                                "code": "unknownMethod",
+                                "description": f"The method {name} is not supported",
+                            },
+                            call_id,
+                        ]
+                    )
+                elif isinstance(answer, dict) and "__error__" in answer:
+                    responses.append(["error", answer["__error__"], call_id])
+                else:
+                    responses.append([name, answer, call_id])
+            return httpx.Response(200, json={"methodResponses": responses, "sessionState": state})
+
+        transport, seen = make_transport(handler)
+        monkeypatch.setattr(
+            tools,
+            "get_jmap_client",
+            lambda: JmapClient(client_settings or settings, transport=transport),
+        )
+        return seen
+
+    return build
+
+
+@pytest.fixture
+def sandbox(tmp_path: Path, monkeypatch: Any) -> Any:
+    """A file sandbox: one allowed root to read from, one directory to write into."""
+    allowed = tmp_path / "allowed"
+    allowed.mkdir()
+    downloads = tmp_path / "downloads"
+    downloads.mkdir()
+    settings = Settings(
+        stalwart=StalwartSettings(
+            url="https://mail.example.com",
+            session_path="/jmap/session",
+            request_timeout_sec=5,
+            max_attachment_mb=25,
+            max_page_size=50,
+            max_body_chars=20000,
+            allow_roots=(str(allowed),),
+            download_dir=str(downloads),
+            session_cache_ttl_sec=60,
+        ),
+        listen="127.0.0.1",
+        port=8000,
+        log_level="info",
+    )
+    monkeypatch.setattr(tools, "get_settings", lambda: settings)
+    return SimpleNamespace(settings=settings, allowed=allowed, downloads=downloads, root=tmp_path)
+

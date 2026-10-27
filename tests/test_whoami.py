@@ -168,10 +168,10 @@ async def test_an_unexpected_failure_becomes_a_tool_error(
 
 
 @pytest.mark.asyncio
-async def test_exactly_one_tool_is_published() -> None:
+async def test_whoami_is_published() -> None:
     published = await mcp_server.list_tools()
 
-    assert [tool.name for tool in published] == ["whoami"]
+    assert "whoami" in [tool.name for tool in published]
 
 
 @pytest.mark.asyncio

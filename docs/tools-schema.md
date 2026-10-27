@@ -1333,10 +1333,11 @@ def list_emails(
 
 Заметки:
 
-* JMAP: `Email/query` (фильтр + сортировка + `calculateTotal: true`) + `Email/get` (свойства
-  сводки) — оба method calls в одном POST.
-* Фильтр роли требует резолва `mailbox_role` → id: `Mailbox/get` по роли (третий method call
-  в том же батче) либо локальный кэш ролей.
+* JMAP: `Email/query` (фильтр + сортировка + `calculateTotal: true`) и `Email/get` (свойства
+  сводки) — **два POST**: в RFC 8620 нет back-reference на весь список id, поэтому `Email/get`
+  получает id уже из ответа `Email/query`. Один `Email/get` берёт до N id.
+* Фильтр роли требует резолва `mailbox_role` → id: `Mailbox/get` по роли (отдельным POST,
+  до `Email/query`) либо локальный кэш ролей.
 * `unread` → `notKeyword: "$seen"`, `flagged` → `hasKeyword: "$flagged"`,
   `has_attachment` → `hasAttachment: true`, `after`/`before` → операторы `after`/`before`.
 * `sort` → `[{property: "receivedAt", isAscending: false}]` / `true`.
