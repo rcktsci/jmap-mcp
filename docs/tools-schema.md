@@ -207,26 +207,87 @@ tool.parameters = apply_input_contract(tool.parameters, tool.name)
     клиент; при удалённом развёртывании содержимое до агента не доходит. Ограничение
     принято осознанно и зафиксировано в описании тула (см. §1.6, п. 12).
 
+13. **Диалект JMAP: `auto | rfc | stalwart`.** Прокси говорит на двух диалектах
+    wire-формата JMAP и переводит формы **в одном месте — в клиенте** (`src/mcp/jmap.py`),
+    а не в тулах. Диалект определяется **один раз на апстрим** и кэшируется в памяти
+    процесса: read-only проба `Email/query` с фильтром из двух условий
+    (`{"operator":"and","conditions":[{"notKeyword":"$seen"},{"inMailbox":"<id>"}]}`, `limit: 1`).
+    `400 notRequest` → `stalwart`, `200` → `rfc`. Проба ничего не меняет.
+    Конфиг-override: `stalwart.dialect: auto | rfc | stalwart` (по умолчанию `auto`),
+    переменная окружения `STALWART_DIALECT`. Значение `rfc`/`stalwart` вообще не спрашивает
+    сервер — это режим для отладки и для фиксации диалекта.
+
+14. **Отклонения Stalwart 1.0.0 от RFC 8620/8621 — живые факты и что делает прокси.**
+    Факты в таблице — из живой проверки Stalwart 1.0.0 (`tools/live_check.py`, §1.7).
+
+    | Что | RFC 8620/8621 | Stalwart 1.0.0 (живой факт) | Что делает прокси |
+    |---|---|---|---|
+    | `Email/query`: несколько условий | `{"operator":"and","conditions":[…]}` | **400 notRequest** — принимает **ровно одно** условие | диалект `stalwart`: условия спрашиваются по одному, id пересекаются **на клиенте**, порядок — по первому запросу, `total` = размер пересечения, страница — срез |
+    | `filter.inMailbox` | `Id` (**одно** id, RFC 8621 §4.4.1) | **строка**: `{"inMailbox":"a"}`; массив → 400 | строка в **обоих** диалектах (массив был неверным и по RFC) |
+    | `filter.header` | `String[]` — `[имя, текст]` (RFC 8621 §4.4.1) | **400** (не поддержан) | диалект `stalwart`: фильтрация **на клиенте** по уже загруженным `from`/`to`/`subject`, `total`/`has_more` пересчитываются честно; другие заголовки (`cc` и т. п.) — явная ошибка |
+    | `filter.notKeyword`/`hasKeyword`/`hasAttachment`/`text`/`after`/`before` | поддержаны | работают по одному | без изменений |
+    | `Email/set` update `mailboxIds` | `Id[Boolean]` — **карта** (RFC 8621 §4.1.2) | **карта** `{"e": true}`; массив → 400 invalidProperties | диалект `stalwart`: карта папок, в которых письмо лежит (`true`); диалект `rfc`: синтаксис patch RFC 8620 §5.3 (`mailboxIds/<id>`: `true` — добавить, `null` — убрать) |
+    | `Email/set` create `mailboxIds` | `Id[Boolean]` — карта | карта принимается | без изменений |
+    | `EmailSubmission/set` create | `IdentityMap<EmailSubmission>`, в значении **обязателен** `emailId` (RFC 8621 §7.1) | **`{emailId: {"emailId": emailId, "identityId": id}}`** — `emailId` дублируется внутри значения; `{emailIds:[…],identityId:…}` → 400 invalidProperties | диалект `stalwart`: ключ = id письма, значение = `{emailId, identityId}`; диалект `rfc`: то же значение (RFC требует `emailId`) |
+    | `EmailSubmission/set` `onSuccessUpdateEmail` | `Id[PatchObject]` — карта id подачи → patch (RFC 8621 §7.5) | **`{"update": {emailId: {"mailboxIds": {sentId: true}}}}`** — карта, без `accountId`; с массивом → notUpdated | диалект `stalwart`: как в Stalwart; диалект `rfc`: `{"#<id подачи>": {"mailboxIds/<id>": true, …}}` |
+    | `Identity/get` | есть `isDefault` | **нет `isDefault`** (есть `replyTo`) | `is_default` вычисляется: первая identity, если сервер не сказал иначе |
+    | `Email/changes` `sinceState` | account state | отвергает sessionState («invalid JMAP State») | `whoami.state` — **account state** из ответа `Mailbox/get` (§1.6, п. 15) |
+    | `Mailbox/get` | `state` в ответе метода | account state в ответе (`state`) | берётся оттуда |
+    | `downloadUrl` | шаблон с `{accountId}`/`{blobId}`/`{name}` | `…/{accountId}/{blobId}/{name}?accept={type}` | `{type}` и `{accept}` подставляются: content-type вложения, по умолчанию `application/octet-stream` |
+    | multipart загрузка | — | поле **`file`**, ответ `{accountId, blobId, type}` | без изменений |
+    | `Email/get` properties/bodyProperties | — | все наши комбинации работают (200) | без изменений |
+
+    **Фолбэки диалектного слоя** (что делает прокси, когда сервер отказывает):
+
+    * `Email/query` с несколькими условиями на Stalwart: условия спрашиваются по одному,
+      id пересекаются на клиенте. Если фильтр матчит больше 10 000 писем, пересечение
+      не считается точно — прокси **не врёт**: ошибка с просьбой сузить фильтр.
+    * `filter.header` на Stalwart: фильтрация на клиенте по `subject`/`from`/`to`
+      (те заголовки, которые уже загружены). Заголовок, который прокси фильтровать не
+      умеет (`cc`, `bcc`, …) — явная ошибка, а не молчаливый пустой результат.
+    * `onSuccessUpdateEmail`, который сервер не знает: `send_draft` повторяет подачу без
+      этого аргумента и переносит черновик в Sent отдельным `Email/set`.
+    * Ошибка метода (`notCreated`/`notUpdated`/`notFound`/`error`) **всегда** становится
+      ошибкой тула с текстом сервера — «успех» при упавшем методе невозможен (§1.6, п. 16).
+
+15. **`whoami.state` — account state, а не session state.** Токен дельта-синка — это
+    account state: сервер возвращает его в ответе метода (`Mailbox/get` с
+    `properties: ["id"]` → поле `state`), а не в документе сессии. Stalwart отвергает
+    sessionState в `Email/changes` («invalid JMAP State»), поэтому `whoami` берёт state
+    именно из ответа метода; `list_changes` использует тот же токен.
+
+16. **Ошибка метода — всегда ошибка тула.** Любой `notCreated`, `notUpdated`, `notFound`
+    или `error` в ответе метода поднимает `ToolError` с текстом сервера (проверка в
+    клиенте, `src/mcp/jmap.py::_check_failure`). Раньше `send_draft` умел отрапортовать
+    об успехе, **не отправив письма**. Побочный эффект: `not_found` в output-схемах
+    `set_flags`/`move_emails` остаётся в схеме (схемы тулов не меняются), но теперь
+    всегда пуст — отсутствующий id называется в тексте ошибки.
+
 ### 1.7 Что требует проверки на живом Stalwart
 
-| # | Что проверить | На что влияет | Что делаем, если не так |
-|---|---|---|---|
-| 1 | `Thread/get` вообще поддерживается; поля Thread (`name`, `totalEmails`, `emailIds`) | `get_thread` | без `Thread/get` — `get_thread` по `Email/query` c фильтром `inThread`; схема ответа та же |
-| 2 | `Email/query` поддерживает `calculateTotal`; его стоимость на ящике 50k+ | `total` в `list_emails`/`search_emails` | флаг `include_total` или убрать `total` |
-| 3 | полнотекстовый поиск: какой оператор у Stalwart (`text`? `header` по body?) | `text` в `search_emails`/`count_emails` | если нет индекса — `text` даёт явную ошибку, не частичный результат |
-| 4 | оператор `header` (substring по `subject`/`from`/`to`) | `subject`, `from_address`, `to_address` | иначе — фильтрация на стороне прокси (дорого) или отказ |
-| 5 | операторы `before`/`after`, `hasKeyword`/`notKeyword` (`$seen`/`$flagged`) | `after`, `before`, `unread`, `flagged` | иначе фильтры не работают — тул должен это сказать |
-| 6 | точные строки `role` у Stalwart (регистр: `inbox` vs `Inbox`), бывают ли нестандартные | `Mailbox.role`, фильтр `mailbox_role` | нормализация в нижний регистр + `other` для неизвестных |
-| 7 | формат `downloadUrl`: плейсхолдеры (`{accountId}`, `{blobId}`, `{name}`), нужен ли `name`, требуется ли тот же Bearer | `download_attachment` | URL собирается из шаблона сессии; иначе — другой маршрут |
-| 8 | формат `uploadUrl` (`{accountId}`) и имя multipart-поля, которое ждёт Stalwart | `upload_attachment` | подобрать по живой проверке |
-| 9 | `EmailSubmission/set` + `onSuccessUpdateEmail`: сам ли Stalwart переносит черновик в Sent | `send_draft` | `onSuccessUpdateEmail` с `mailboxIds` целиком в Sent |
-| 10 | `Identity/get`: есть ли `replyTo` и `isDefault` в ответе Stalwart | `Identity` | `reply_to` → пустой список, `is_default` → вычислять по первой |
-| 11 | `Email/get`: что приходит — `textBody`/`htmlBody` или `bodyValues`; нужен ли `bodyProperties` | `text_body` | брать `bodyValues[partId]` как фолбэк |
-| 12 | `keywords` у Stalwart: `$seen`/`$flagged`/`$draft`/`$answered` или свои | `keywords`, `set_flags` | маппинг на свои имена — тогда описать в докстринге |
-| 13 | `state` в ответе JMAP есть ли всегда; `session.state` == ли `account state` | `whoami.state`, `list_changes` | если state нет — `list_changes` падает с ToolError («сервер не отдал state; дельта-синк недоступна»), а не молча отдаёт пустоту |
-| 14 | `Email/set`: поддержка ключевого слова `$answered` | `set_flags.answered` | если нет — флаг отклоняется с внятной ошибкой |
-| 15 | `Mailbox/get`: приходят ли `totalEmails`/`unreadEmails` без явного запроса свойств | `Mailbox` | запросить свойства явно |
-| 16 | принимает ли Stalwart `limit: 0` в `Email/query` | `count_emails` | не полагаемся на `limit: 0`: внутренний `limit: 1` + `calculateTotal: true`, счёт берётся из `total` |
+Живая проверка — `tools/live_check.py` (зонд, 16 пунктов; ключ только из окружения, в
+выводе — его `sha256`-префикс). Колонка «статус» — результат прогона по Stalwart 1.0.0:
+**закрыт** — факт подтверждён и код на него опирается; **открыт** — факт не подтверждён,
+код держит фолбэк (§1.6, п. 14).
+
+| # | Что проверить | На что влияет | Что делаем, если не так | Статус |
+|---|---|---|---|---|
+| 1 | `Thread/get` вообще поддерживается; поля Thread (`name`, `totalEmails`, `emailIds`) | `get_thread` | без `Thread/get` — `get_thread` по `Email/query` c фильтром `inThread`; схема ответа та же | **закрыт** — поддерживается, поля приходят |
+| 2 | `Email/query` поддерживает `calculateTotal`; его стоимость на ящике 50k+ | `total` в `list_emails`/`search_emails` | флаг `include_total` или убрать `total` | **закрыт** — `total` приходит, `calculateTotal` работает |
+| 3 | полнотекстовый поиск: какой оператор у Stalwart (`text`? `header` по body?) | `text` в `search_emails`/`count_emails` | если нет индекса — `text` даёт явную ошибку, не частичный результат | **закрыт** — оператор `text` принимается |
+| 4 | оператор `header` (substring по `subject`/`from`/`to`) | `subject`, `from_address`, `to_address` | иначе — фильтрация на стороне прокси (дорого) или отказ | **открыт** — Stalwart отвечает 400 на `header`; прокси фильтрует на клиенте по `subject`/`from`/`to` (§1.6, п. 14) |
+| 5 | операторы `before`/`after`, `hasKeyword`/`notKeyword` (`$seen`/`$flagged`) | `after`, `before`, `unread`, `flagged` | иначе фильтры не работают — тул должен это сказать | **закрыт** — работают по одному условию; несколько условий Stalwart не берёт (§1.6, п. 14) |
+| 6 | точные строки `role` у Stalwart (регистр: `inbox` vs `Inbox`), бывают ли нестандартные | `Mailbox.role`, фильтр `mailbox_role` | нормализация в нижний регистр + `other` для неизвестных | **закрыт** — `inbox`, `drafts`, `sent`, `trash`, `junk` (без `archive`) |
+| 7 | формат `downloadUrl`: плейсхолдеры (`{accountId}`, `{blobId}`, `{name}`), нужен ли `name`, требуется ли тот же Bearer | `download_attachment` | URL собирается из шаблона сессии; иначе — другой маршрут | **закрыт** — `…/{accountId}/{blobId}/{name}?accept={type}`; `{type}` подставляется (§1.6, п. 14) |
+| 8 | формат `uploadUrl` (`{accountId}`) и имя multipart-поля, которое ждёт Stalwart | `upload_attachment` | подобрать по живой проверке | **закрыт** — поле `file`, ответ `{accountId, blobId, type}` |
+| 9 | `EmailSubmission/set` + `onSuccessUpdateEmail`: сам ли Stalwart переносит черновик в Sent | `send_draft` | `onSuccessUpdateEmail` с `mailboxIds` целиком в Sent | **закрыт по форме** — форма `create`/`onSuccessUpdateEmail` подтверждена; перенос черновика самим сервером — **открыт** (живого прогона с отправкой не было) |
+| 10 | `Identity/get`: есть ли `replyTo` и `isDefault` в ответе Stalwart | `Identity` | `reply_to` → пустой список, `is_default` → вычислять по первой | **закрыт** — `replyTo` есть, `isDefault` **нет** (`is_default` вычисляется) |
+| 11 | `Email/get`: что приходит — `textBody`/`htmlBody` или `bodyValues`; нужен ли `bodyProperties` | `text_body` | брать `bodyValues[partId]` как фолбэк | **закрыт** — `bodyProperties` принимаются, тело приходит |
+| 12 | `keywords` у Stalwart: `$seen`/`$flagged`/`$draft`/`$answered` или свои | `keywords`, `set_flags` | маппинг на свои имена — тогда описать в докстринге | **закрыт** — стандартные `$seen`/`$flagged`/`$draft` (см. п. 14 про `$answered`) |
+| 13 | `state` в ответе JMAP есть ли всегда; `session.state` == ли `account state` | `whoami.state`, `list_changes` | если state нет — `list_changes` падает с ToolError («сервер не отдал state; дельта-синк недоступна»), а не молча отдаёт пустоту | **закрыт** — account state в ответе `Mailbox/get`; `session.state` в `Email/changes` **не принимается** (§1.6, п. 15) |
+| 14 | `Email/set`: поддержка ключевого слова `$answered` | `set_flags.answered` | если нет — флаг отклоняется с внятной ошибкой, остальные флаги всё равно ставятся | **открыт** — прогон без `--allow-write` слово не проверял; фолбэк на месте (§1.6, п. 14) |
+| 15 | `Mailbox/get`: приходят ли `totalEmails`/`unreadEmails` без явного запроса свойств | `Mailbox` | запросить свойства явно | **закрыт** — счётчики приходят |
+| 16 | принимает ли Stalwart `limit: 0` в `Email/query` | `count_emails` | не полагаемся на `limit: 0`: внутренний `limit: 1` + `calculateTotal: true`, счёт берётся из `total` | **закрыт** — `limit: 0` принимается, но прокси всё равно просит `limit: 1` |
 
 ### 1.8 Модели (Python-типы) — дословно из `tools/tools_schema.py`
 

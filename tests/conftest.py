@@ -49,6 +49,7 @@ def settings() -> Settings:
             allow_roots=(".",),
             download_dir=None,
             session_cache_ttl_sec=60,
+            dialect="rfc",
         ),
         listen="127.0.0.1",
         port=8000,
@@ -117,6 +118,26 @@ def jmap_calls(seen: list[Any], method: str) -> list[dict]:
     return found
 
 
+def is_dialect_probe(args: dict) -> bool:
+    """Is this the read-only probe the client uses to ask the dialect?
+
+    The probe is one ``Email/query`` with two conditions (``operator`` in the
+    filter) and ``limit: 1``; it never asks for the total.
+    """
+    filter_ = args.get("filter")
+    return (
+        args.get("limit") == 1
+        and "calculateTotal" not in args
+        and isinstance(filter_, dict)
+        and "operator" in filter_
+    )
+
+
+def is_dialect_probe_mailbox(args: dict) -> bool:
+    """Is this the call the client uses to find a folder for the probe?"""
+    return args.get("properties") == ["id", "role"]
+
+
 @pytest.fixture
 def bearer() -> Any:
     """The bearer of the request being served."""
@@ -169,6 +190,21 @@ def mock_jmap(
             body = json.loads(request.content)
             responses: list[list[Any]] = []
             for name, _args, call_id in body.get("methodCalls", []):
+                if name == "Email/query" and is_dialect_probe(_args):
+                    # The probe of the client: the RFC dialect answers it.
+                    responses.append(
+                        ["Email/query", {"accountId": "account-1", "ids": [], "total": 0}, call_id]
+                    )
+                    continue
+                if name == "Mailbox/get" and is_dialect_probe_mailbox(_args):
+                    responses.append(
+                        [
+                            "Mailbox/get",
+                            {"accountId": "account-1", "list": [{"id": "mb-probe", "role": "inbox"}]},
+                            call_id,
+                        ]
+                    )
+                    continue
                 queue = queues.get(name)
                 if queue is not None:
                     answer = queue.pop(0) if queue else None
@@ -221,6 +257,7 @@ def sandbox(tmp_path: Path, monkeypatch: Any) -> Any:
             allow_roots=(str(allowed),),
             download_dir=str(downloads),
             session_cache_ttl_sec=60,
+            dialect="rfc",
         ),
         listen="127.0.0.1",
         port=8000,

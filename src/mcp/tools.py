@@ -25,7 +25,7 @@ from pydantic import Field
 
 from src.config import get_settings
 from src.mcp.auth import current_bearer, fingerprint
-from src.mcp.jmap import JmapClient, JmapEnvelope, JmapSession
+from src.mcp.jmap import JmapClient, JmapEnvelope, JmapMethodFailure, JmapSession
 from src.mcp.schemas import (
     Attachment,
     AttachmentRef,
@@ -175,7 +175,7 @@ async def _call(
 ) -> JmapEnvelope:
     """One batched JMAP call."""
     try:
-        return await client.call(bearer, session, methods)
+        return await client.call(bearer, session, methods, tool)
     except ToolError:
         raise
     except Exception as exc:  # noqa: BLE001 - the tool must not crash the call
@@ -224,6 +224,17 @@ def _ids_of(value: Any) -> list[str]:
     if not isinstance(value, list):
         return []
     return [str(item) for item in value if isinstance(item, (str, int)) and str(item)]
+
+
+def _mailbox_ids_of(value: Any) -> list[str]:
+    """The folders of a message - a list of ids or a map of ids (RFC 8621).
+
+    RFC 8621 §4.1.2 defines ``mailboxIds`` as a map (``Id[Boolean]``); some
+    servers answer with a plain list. Both are understood.
+    """
+    if isinstance(value, dict):
+        return [str(key) for key in value if key]
+    return _ids_of(value)
 
 
 def _parse_datetime(value: Any) -> datetime | None:
@@ -596,10 +607,17 @@ def _conditions(
     from_address: str | None = None,
     to_address: str | None = None,
 ) -> list[dict]:
-    """The conditions of a message query."""
+    """The conditions of a message query (RFC 8621 §4.4.1).
+
+    The forms are the ones of the RFC: ``inMailbox`` is the id of one folder
+    and the header condition is the array of the name of the header field and
+    the text to look for. The dialect of the upstream (Stalwart takes one
+    condition per query and does not know the header condition at all) is
+    handled by the client.
+    """
     conditions: list[dict] = []
     if mailbox:
-        conditions.append({"inMailbox": [mailbox]})
+        conditions.append({"inMailbox": mailbox})
     if unread:
         conditions.append({"notKeyword": "$seen"})
     if flagged:
@@ -609,11 +627,11 @@ def _conditions(
     if text:
         conditions.append({"text": text})
     if subject:
-        conditions.append({"header": {"name": "subject", "value": subject}})
+        conditions.append({"header": ["subject", subject]})
     if from_address:
-        conditions.append({"header": {"name": "from", "value": from_address}})
+        conditions.append({"header": ["from", from_address]})
     if to_address:
-        conditions.append({"header": {"name": "to", "value": to_address}})
+        conditions.append({"header": ["to", to_address]})
     if after is not None:
         conditions.append({"after": _iso(after)})
     if before is not None:
@@ -784,12 +802,16 @@ async def whoami() -> WhoamiResult:
     identities = _parse_identities(envelope.result_of("Identity/get"))
     default = next((identity for identity in identities if identity["is_default"]), identities[0])
 
+    # The account state - the token of list_changes - is the state of the
+    # answer of a method, not the state of the session document.
+    state = await client.account_state(bearer, session) or envelope.state
+
     return {
         "account_id": session.account_id,
         "email": default["email"],
         "identities": identities,
         "capabilities": list(session.capabilities),
-        "state": envelope.state,
+        "state": state,
     }
 
 
@@ -1299,6 +1321,19 @@ def _error_text_of(error: Any) -> str:
     return str(error)
 
 
+def _detail_of_failure(failure: JmapMethodFailure) -> str:
+    """The text of the server out of a failed method."""
+    payload = failure.payload if isinstance(failure.payload, dict) else {}
+    for key in ("notCreated", "notUpdated"):
+        errors = payload.get(key)
+        if isinstance(errors, dict) and errors:
+            return _error_text_of(next(iter(errors.values())))
+    not_found = payload.get("notFound")
+    if isinstance(not_found, list) and not_found:
+        return f"the server does not know {', '.join(str(item) for item in not_found)}"
+    return str(failure)
+
+
 async def _email_set(
     client: JmapClient,
     bearer: str,
@@ -1343,7 +1378,7 @@ async def _mailboxes_of(
 
     folders: dict[str, list[str]] = {}
     for item in _list_of(envelope.result_of("Email/get")):
-        folders[str(item.get("id") or "")] = _ids_of(item.get("mailboxIds"))
+        folders[str(item.get("id") or "")] = _mailbox_ids_of(item.get("mailboxIds"))
     return folders
 
 
@@ -1466,7 +1501,7 @@ async def _original_message(
 def _sent_patch(draft: dict, sent_id: str) -> dict[str, bool]:
     """The patch that puts a message into the Sent folder and nowhere else."""
     patch = {sent_id: True}
-    for mailbox in _ids_of(draft.get("mailboxIds")):
+    for mailbox in _mailbox_ids_of(draft.get("mailboxIds")):
         if mailbox != sent_id:
             patch[mailbox] = False
     return patch
@@ -1637,17 +1672,17 @@ async def set_flags(
 
     client, session = await _upstream(bearer, "set_flags")
     update = {email_id: {"keywords": dict(keywords)} for email_id in ids}
-    payload = await _email_set(client, bearer, session, "set_flags", {"update": update})
-
-    not_updated = payload.get("notUpdated")
-    if isinstance(not_updated, dict) and not_updated:
-        await _answer_unsupported_flag(
-            client, bearer, session, ids, keywords, not_updated, "set_flags"
-        )
-        raise ToolError(
-            f"the mail server refused to change the flags of {len(not_updated)} message(s) "
-            f"({', '.join(str(key) for key in not_updated)}): {_error_text_of(next(iter(not_updated.values())))}"
-        )
+    try:
+        payload = await _email_set(client, bearer, session, "set_flags", {"update": update})
+    except JmapMethodFailure as failure:
+        # The server may not know the keyword $answered - the other flags go.
+        if await _answer_unsupported_flag(client, bearer, session, ids, keywords, failure, "set_flags"):
+            raise ToolError(
+                "the mail server does not support the $answered flag (replied) and refused it - the other flags "
+                "you passed (seen, flagged) were applied. Leave answered out if the server does not know the "
+                "keyword."
+            ) from None
+        raise
 
     return {
         "updated": _map_keys(payload.get("updated")),
@@ -1661,32 +1696,33 @@ async def _answer_unsupported_flag(
     session: JmapSession,
     ids: Sequence[str],
     keywords: dict[str, bool],
-    not_updated: dict,
+    failure: JmapMethodFailure,
     tool: str,
-) -> None:
+) -> bool:
     """The server may not know the keyword ``$answered`` - the other flags still go.
 
-    The rest of the flags are applied with a second call, and the caller turns
-    the refusal of ``$answered`` into a tool error of its own.
+    The rest of the flags are applied with a second call; the caller turns the
+    refusal of ``$answered`` into a tool error of its own.
     """
     if "$answered" not in keywords:
-        return
+        return False
+    payload = failure.payload if isinstance(failure.payload, dict) else {}
+    not_updated = payload.get("notUpdated")
+    if not isinstance(not_updated, dict) or not not_updated:
+        return False
     text = " ".join(_error_text_of(error) for error in not_updated.values()).lower()
     if "answered" not in text:
-        return
+        return False
     rest = {keyword: value for keyword, value in keywords.items() if keyword != "$answered"}
     if not rest:
-        return
+        return False
     logger.warning("%s: the server refused the $answered flag, applying the other flags", tool)
     update = {email_id: {"keywords": rest} for email_id in ids}
-    payload = await _email_set(client, bearer, session, tool, {"update": update})
-    still_failing = payload.get("notUpdated")
+    answer = await _email_set(client, bearer, session, tool, {"update": update})
+    still_failing = answer.get("notUpdated")
     if isinstance(still_failing, dict) and still_failing:
-        return
-    raise ToolError(
-        "the mail server does not support the $answered flag (replied) and refused it - the other flags you "
-        "passed (seen, flagged) were applied. Leave answered out if the server does not know the keyword."
-    )
+        return False
+    return True
 
 
 async def move_emails(
@@ -1739,12 +1775,6 @@ async def move_emails(
         update[email_id] = {"mailboxIds": patch}
 
     payload = await _email_set(client, bearer, session, "move_emails", {"update": update})
-    not_updated = payload.get("notUpdated")
-    if isinstance(not_updated, dict) and not_updated:
-        raise ToolError(
-            f"the mail server refused to move {len(not_updated)} message(s) "
-            f"({', '.join(str(key) for key in not_updated)}): {_error_text_of(next(iter(not_updated.values())))}"
-        )
     return {
         "moved": _map_keys(payload.get("updated")),
         "not_found": _ids_of(payload.get("notFound")),
@@ -1838,15 +1868,14 @@ async def create_draft(
             blobs.append({"blobId": blob_id})
         email["attachments"] = blobs
 
-    payload = await _email_set(client, bearer, session, "create_draft", {"create": {"draft": email}})
-    not_created = payload.get("notCreated")
-    if isinstance(not_created, dict) and not_created:
+    try:
+        payload = await _email_set(client, bearer, session, "create_draft", {"create": {"draft": email}})
+    except JmapMethodFailure as failure:
         raise ToolError(
             "the mail server refused to create the draft: "
-            f"{_error_text_of(next(iter(not_created.values())))}. Check the recipients, the sender identity "
-            "and whether the account may write mail."
-        )
-
+            f"{_detail_of_failure(failure)}. Check the recipients, the sender identity and whether the account "
+            "may write mail."
+        ) from None
     created = payload.get("created")
     draft = created.get("draft") if isinstance(created, dict) else None
     draft_id = str(draft.get("id") or "") if isinstance(draft, dict) else ""
@@ -1910,40 +1939,31 @@ async def send_draft(
     sent_id = await _resolve_role(client, bearer, session, "send_draft", SENT_ROLE)
     args: dict[str, Any] = {
         "accountId": session.account_id,
-        "create": {"send": {"identityId": identity["id"], "emailId": wanted}},
-        "onSuccessUpdateEmail": {"update": {wanted: {"mailboxIds": {sent_id: True}}}},
+        # The logical form of the submission - the client translates it into
+        # the dialect of the server (see docs/tools-schema.md §1.6).
+        "create": {wanted: {"identityId": identity["id"], "emailId": wanted}},
+        "onSuccessUpdateEmail": {"update": {wanted: {"mailboxIds": _sent_patch(draft, sent_id)}}},
     }
     try:
-        envelope = await _call(client, bearer, session, [("EmailSubmission/set", args)], "send_draft")
-    except ToolError as exc:
-        if "onsuccessupdateemail" not in str(exc).lower():
-            raise
-        logger.warning(
-            "send_draft: the server does not support onSuccessUpdateEmail (%s), moving the draft with Email/set",
-            fingerprint(bearer),
-        )
-        without = {key: value for key, value in args.items() if key != "onSuccessUpdateEmail"}
-        envelope = await _call(client, bearer, session, [("EmailSubmission/set", without)], "send_draft")
-        await _email_set(
-            client,
-            bearer,
-            session,
-            "send_draft",
-            {"update": {wanted: {"mailboxIds": _sent_patch(draft, sent_id)}}},
-        )
+        envelope = await _submit_draft(client, bearer, session, args, draft, sent_id, wanted)
+    except JmapMethodFailure as failure:
+        raise ToolError(
+            "the mail server refused to send the draft: "
+            f"{_detail_of_failure(failure)}. Check that the draft still exists and that the account may send mail."
+        ) from None
 
     payload = envelope.result_of("EmailSubmission/set")
     payload = payload if isinstance(payload, dict) else {}
-    not_created = payload.get("notCreated")
-    if isinstance(not_created, dict) and not_created:
-        raise ToolError(
-            "the mail server refused to send the draft: "
-            f"{_error_text_of(next(iter(not_created.values())))}. Check that the draft still exists and that "
-            "the account may send mail."
-        )
 
     created = payload.get("created")
-    entry = created.get("send") if isinstance(created, dict) else None
+    entry = created.get(wanted) if isinstance(created, dict) else None
+    if not isinstance(entry, dict):
+        # The server may answer with another key - the submission is the only
+        # one that was created.
+        for value in (created or {}).values() if isinstance(created, dict) else []:
+            if isinstance(value, dict):
+                entry = value
+                break
     sent_at = _parse_datetime(entry.get("sendAt")) if isinstance(entry, dict) else None
     if sent_at is None:
         sent_at = datetime.now(timezone.utc)
@@ -1958,6 +1978,41 @@ async def send_draft(
         "sent_at": sent_at,
         "recipients": recipients,
     }
+
+
+async def _submit_draft(
+    client: JmapClient,
+    bearer: str,
+    session: JmapSession,
+    args: dict[str, Any],
+    draft: dict,
+    sent_id: str,
+    email_id: str,
+) -> JmapEnvelope:
+    """The submission of the draft - with a fallback for a server without the argument.
+
+    A server that does not know ``onSuccessUpdateEmail`` gets the submission
+    without it; the draft is then moved to the Sent folder with ``Email/set``.
+    """
+    try:
+        return await _call(client, bearer, session, [("EmailSubmission/set", args)], "send_draft")
+    except (ToolError, JmapMethodFailure) as exc:
+        if "onsuccessupdateemail" not in str(exc).lower():
+            raise
+    logger.warning(
+        "send_draft: the server does not support onSuccessUpdateEmail (%s), moving the draft with Email/set",
+        fingerprint(bearer),
+    )
+    without = {key: value for key, value in args.items() if key != "onSuccessUpdateEmail"}
+    envelope = await _call(client, bearer, session, [("EmailSubmission/set", without)], "send_draft")
+    await _email_set(
+        client,
+        bearer,
+        session,
+        "send_draft",
+        {"update": {email_id: {"mailboxIds": _sent_patch(draft, sent_id)}}},
+    )
+    return envelope
 
 
 async def download_attachment(
@@ -1991,8 +2046,9 @@ async def download_attachment(
         )
 
     file_name = _safe_file_name(name or attachment.get("name"))
-    content, header_type = await client.download_blob(bearer, session, blob_id, file_name)
-    content_type = str(attachment.get("type") or "").strip() or header_type or "application/octet-stream"
+    wanted_type = str(attachment.get("type") or "").strip() or "application/octet-stream"
+    content, header_type = await client.download_blob(bearer, session, blob_id, file_name, wanted_type)
+    content_type = wanted_type or header_type or "application/octet-stream"
 
     directory = _download_dir()
     target = _write_unique_file(directory, file_name, content)

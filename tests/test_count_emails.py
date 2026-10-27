@@ -48,7 +48,7 @@ async def test_count_emails_uses_the_same_filters_as_the_search(
     body = json.loads(seen[1].content)
     assert body["methodCalls"][0][1]["filter"] == {
         "operator": "and",
-        "conditions": [{"inMailbox": ["mb-1"]}, {"notKeyword": "$seen"}, {"text": "report"}],
+        "conditions": [{"inMailbox": "mb-1"}, {"notKeyword": "$seen"}, {"text": "report"}],
     }
 
 

@@ -34,18 +34,36 @@ async def test_it_moves_by_role(mock_jmap: Any, bearer: Any) -> None:
         {
             "Mailbox/get": MAILBOXES,
             "Email/get": EMAILS,
+            "Email/set": {"updated": {"m1": None, "m2": None}, "notFound": [], "notUpdated": {}},
+        }
+    )
+
+    result = await tools.move_emails(ids=["m1", "m2"], mailbox_role="trash")
+
+    assert result["moved"] == ["m1", "m2"]
+    update = jmap_calls(seen, "Email/set")[0]["update"]
+    # The message leaves the folders it is in - mailboxIds is the whole set.
+    # RFC 8621 §4.6: the patch syntax of RFC 8620 §5.3 - the new folder is
+    # added, the old ones are removed.
+    assert update["m1"] == {"mailboxIds/mb-trash": True, "mailboxIds/mb-inbox": None}
+    assert update["m2"] == {"mailboxIds/mb-trash": True, "mailboxIds/mb-inbox": None}
+
+
+async def test_a_message_that_does_not_exist_is_a_tool_error(mock_jmap: Any, bearer: Any) -> None:
+    mock_jmap(
+        {
+            "Mailbox/get": MAILBOXES,
+            "Email/get": EMAILS,
             "Email/set": {"updated": {"m1": None, "m2": None}, "notFound": ["m3"], "notUpdated": {}},
         }
     )
 
-    result = await tools.move_emails(ids=["m1", "m2", "m3"], mailbox_role="trash")
+    with pytest.raises(ToolError) as failure:
+        await tools.move_emails(ids=["m1", "m2", "m3"], mailbox_role="trash")
 
-    assert result["moved"] == ["m1", "m2"]
-    assert result["not_found"] == ["m3"]
-    update = jmap_calls(seen, "Email/set")[0]["update"]
-    # The message leaves the folders it is in - mailboxIds is the whole set.
-    assert update["m1"] == {"mailboxIds": {"mb-trash": True, "mb-inbox": False}}
-    assert update["m2"] == {"mailboxIds": {"mb-trash": True, "mb-inbox": False}}
+    message = str(failure.value)
+    assert "m3" in message
+    assert "do not exist" in message
 
 
 async def test_it_moves_by_mailbox_id(mock_jmap: Any, bearer: Any) -> None:
@@ -60,7 +78,7 @@ async def test_it_moves_by_mailbox_id(mock_jmap: Any, bearer: Any) -> None:
 
     assert result["moved"] == ["m1"]
     update = jmap_calls(seen, "Email/set")[0]["update"]
-    assert update == {"m1": {"mailboxIds": {"mb-trash": True, "mb-inbox": False}}}
+    assert update == {"m1": {"mailboxIds/mb-trash": True, "mailboxIds/mb-inbox": None}}
 
 
 async def test_it_refuses_two_targets(mock_jmap: Any, bearer: Any) -> None:

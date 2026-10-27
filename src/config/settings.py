@@ -20,6 +20,13 @@ import yaml
 
 DEFAULT_CONFIG_PATH = "config.yml"
 
+#: The dialects of the JMAP wire format the proxy speaks. ``auto`` asks the
+#: server once which dialect it speaks (a read-only probe).
+DIALECT_AUTO = "auto"
+DIALECT_RFC = "rfc"
+DIALECT_STALWART = "stalwart"
+DIALECTS: tuple[str, ...] = (DIALECT_AUTO, DIALECT_RFC, DIALECT_STALWART)
+
 #: Built-in defaults. Every one of them can be overridden by config.yml or env.
 DEFAULTS: dict[str, Any] = {
     "stalwart": {
@@ -32,6 +39,7 @@ DEFAULTS: dict[str, Any] = {
         "allow_roots": ["."],
         "download_dir": None,
         "session_cache_ttl_sec": 60,
+        "dialect": "auto",
     },
     "listen": "127.0.0.1",
     "port": 8000,
@@ -49,6 +57,7 @@ ENV_OVERRIDES: dict[str, tuple[str, ...]] = {
     "ALLOW_ROOTS": ("stalwart", "allow_roots"),
     "DOWNLOAD_DIR": ("stalwart", "download_dir"),
     "SESSION_CACHE_TTL_SEC": ("stalwart", "session_cache_ttl_sec"),
+    "STALWART_DIALECT": ("stalwart", "dialect"),
     "HOST": ("listen",),
     # MCP_PORT is an alias of PORT; PORT wins when both are set.
     "MCP_PORT": ("port",),
@@ -70,6 +79,9 @@ class StalwartSettings:
     allow_roots: tuple[str, ...]
     download_dir: str | None
     session_cache_ttl_sec: int
+    #: The JMAP dialect of the upstream: ``auto`` (ask the server once),
+    #: ``rfc`` (RFC 8620/8621 as written down) or ``stalwart``.
+    dialect: str = "auto"
 
 
 @dataclass(frozen=True)
@@ -161,6 +173,9 @@ def load_settings(config_path: str | None = None) -> Settings:
     merged = _apply_env(merged, read_dotenv())
 
     stalwart_raw = merged["stalwart"]
+    dialect = str(stalwart_raw.get("dialect") or DIALECT_AUTO).strip().lower()
+    if dialect not in DIALECTS:
+        dialect = DIALECT_AUTO
     return Settings(
         stalwart=StalwartSettings(
             url=str(stalwart_raw["url"]).rstrip("/"),
@@ -172,6 +187,7 @@ def load_settings(config_path: str | None = None) -> Settings:
             allow_roots=tuple(_as_list(stalwart_raw["allow_roots"])),
             download_dir=(str(stalwart_raw["download_dir"]) if stalwart_raw["download_dir"] else None),
             session_cache_ttl_sec=int(stalwart_raw["session_cache_ttl_sec"]),
+            dialect=dialect,
         ),
         listen=str(merged["listen"]),
         port=int(merged["port"]),

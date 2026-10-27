@@ -10,7 +10,7 @@ from mcp.server.mcpserver.exceptions import ToolError
 from src.mcp import tools
 from tests.conftest import jmap_calls, jmap_error
 
-EMAIL_SET_OK = {"updated": {"m1": None, "m2": None}, "notFound": ["m3"], "notUpdated": {}}
+EMAIL_SET_OK = {"updated": {"m1": None, "m2": None}, "notFound": [], "notUpdated": {}}
 
 
 async def test_it_changes_the_flags(mock_jmap: Any, bearer: Any) -> None:
@@ -19,12 +19,23 @@ async def test_it_changes_the_flags(mock_jmap: Any, bearer: Any) -> None:
     result = await tools.set_flags(ids=["m1", "m2"], seen=True, flagged=False)
 
     assert result["updated"] == ["m1", "m2"]
-    assert result["not_found"] == ["m3"]
+    assert result["not_found"] == []
     update = jmap_calls(seen, "Email/set")[0]["update"]
     assert update == {
         "m1": {"keywords": {"$seen": True, "$flagged": False}},
         "m2": {"keywords": {"$seen": True, "$flagged": False}},
     }
+
+
+async def test_a_message_that_does_not_exist_is_a_tool_error(mock_jmap: Any, bearer: Any) -> None:
+    mock_jmap({"Email/set": {"updated": {"m1": None, "m2": None}, "notFound": ["m3"], "notUpdated": {}}})
+
+    with pytest.raises(ToolError) as failure:
+        await tools.set_flags(ids=["m1", "m2", "m3"], seen=True)
+
+    message = str(failure.value)
+    assert "m3" in message
+    assert "do not exist" in message
 
 
 async def test_it_leaves_the_flags_it_was_not_given(mock_jmap: Any, bearer: Any) -> None:

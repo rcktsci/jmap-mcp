@@ -62,8 +62,12 @@ async def test_it_sends_the_draft(mock_jmap: Any, bearer: Any) -> None:
         "bcc@example.com",
     ]
     args = jmap_calls(seen, "EmailSubmission/set")[0]
-    assert args["create"] == {"send": {"identityId": "id-1", "emailId": "d1"}}
-    assert args["onSuccessUpdateEmail"] == {"update": {"d1": {"mailboxIds": {"mb-sent": True}}}}
+    # RFC 8621 §7.1: the id of the email is inside the submission as well.
+    assert args["create"] == {"d1": {"emailId": "d1", "identityId": "id-1"}}
+    # RFC 8621 §7.5: the patch of the message, keyed by the submission.
+    assert args["onSuccessUpdateEmail"] == {
+        "#d1": {"mailboxIds/mb-sent": True, "mailboxIds/mb-drafts": None}
+    }
 
 
 async def test_it_moves_the_draft_with_email_set_when_on_success_is_not_supported(
@@ -93,7 +97,7 @@ async def test_it_moves_the_draft_with_email_set_when_on_success_is_not_supporte
     assert len(submissions) == 2
     assert "onSuccessUpdateEmail" not in submissions[1]
     update = jmap_calls(seen, "Email/set")[0]["update"]
-    assert update == {"d1": {"mailboxIds": {"mb-sent": True, "mb-drafts": False}}}
+    assert update == {"d1": {"mailboxIds/mb-sent": True, "mailboxIds/mb-drafts": None}}
 
 
 async def test_it_refuses_an_unknown_draft(mock_jmap: Any, bearer: Any) -> None:
@@ -110,6 +114,40 @@ async def test_it_refuses_an_unknown_draft(mock_jmap: Any, bearer: Any) -> None:
         await tools.send_draft(draft_id="d1")
 
     assert "no draft with the id" in str(failure.value)
+
+
+async def test_it_falls_back_when_the_argument_is_refused_as_a_set_error(
+    mock_jmap: Any, bearer: Any
+) -> None:
+    seen = mock_jmap(
+        {
+            "Email/get": DRAFT,
+            "Identity/get": IDENTITIES,
+            "Mailbox/get": MAILBOXES,
+            "EmailSubmission/set": [
+                {
+                    "created": {},
+                    "notCreated": {},
+                    "notUpdated": {
+                        "d1": {
+                            "type": "invalidArguments",
+                            "code": "invalidArguments",
+                            "description": "the argument onSuccessUpdateEmail is not supported",
+                        }
+                    },
+                },
+                SENT,
+            ],
+            "Email/set": {"updated": {"d1": None}, "notFound": [], "notUpdated": {}},
+        }
+    )
+
+    result = await tools.send_draft(draft_id="d1")
+
+    assert result["message_id"] == "<draft@example.com>"
+    submissions = jmap_calls(seen, "EmailSubmission/set")
+    assert len(submissions) == 2
+    assert "onSuccessUpdateEmail" not in submissions[1]
 
 
 async def test_it_refuses_an_empty_draft_id(mock_jmap: Any, bearer: Any) -> None:

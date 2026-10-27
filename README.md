@@ -61,6 +61,26 @@ The full contract of every tool (input schema, output schema, errors) lives in
 - **Limits.** The size of an attachment (`max_attachment_mb`, 25 MB by default), the size of a page
   (`max_page_size`) and the size of a body (`max_body_chars`) are capped.
 
+## Stalwart dialect
+
+Stalwart 1.0.0 does not speak RFC 8620/8621 to the letter. The proxy speaks both dialects and
+asks the server once which one it is (`stalwart.dialect: auto | rfc | stalwart`, default `auto`).
+The translation lives in one place - the JMAP client - so the tools stay dialect-agnostic.
+
+| What | RFC 8620/8621 | Stalwart 1.0.0 | What the proxy does |
+|---|---|---|---|
+| `Email/query` with several conditions | `{"operator":"and","conditions":[…]}` | 400 - exactly one condition per query | asks one condition at a time and intersects the ids itself; `total` is the size of the intersection |
+| `filter.header` | `["subject", "text"]` | 400 - not supported at all | filters on the client over the headers it loaded anyway (`subject`, `from`, `to`) and recounts `total`/`has_more` |
+| `Email/set` update `mailboxIds` | a map of the folders (RFC 8621 §4.1.2) | a map - an array is refused | the Stalwart dialect sends the map of the folders, the RFC dialect the patch syntax of RFC 8620 §5.3 |
+| `EmailSubmission/set` | `emailId` is a required property of the submission (RFC 8621 §7.1) | wants `emailId` inside the value as well | the id of the email is the key of the map and is also inside the value |
+| `EmailSubmission/set` `onSuccessUpdateEmail` | a map of the submission id to a patch (RFC 8621 §7.5) | `{"update": {emailId: {"mailboxIds": {sentId: true}}}}` | each dialect gets its own form; if the server refuses the argument, the draft is moved with a separate `Email/set` |
+| `whoami.state` | the account state | the account state is in the answer of a method, the session state is refused by `Email/changes` | the state is taken from `Mailbox/get`, so `list_changes` gets a token the server accepts |
+| `downloadUrl` | a template with `{accountId}`/`{blobId}`/`{name}` | `…/{name}?accept={type}` | `{type}` and `{accept}` are filled with the content type of the attachment |
+
+A failed method is never a success: `notCreated`, `notUpdated`, `notFound` and method errors
+always become a tool error with the text of the server. The full table with the fallbacks is in
+[`docs/tools-schema.md`](docs/tools-schema.md) §1.6.
+
 ## Configuration
 
 `config.yml` (copy `config.yml.example`, no secrets in it) or environment variables - the environment
@@ -77,6 +97,7 @@ stalwart:
   allow_roots: ["."]                 # where upload_attachment may read
   download_dir: null                 # where download_attachment writes (null = a temp directory)
   session_cache_ttl_sec: 60
+  dialect: "auto"                    # auto | rfc | stalwart - the dialect of the upstream
 listen: "127.0.0.1"
 port: 8000
 log_level: "info"
@@ -93,6 +114,7 @@ log_level: "info"
 | `ALLOW_ROOTS`          | Comma separated roots `upload_attachment` may read | `.`            |
 | `DOWNLOAD_DIR`         | Where `download_attachment` writes                 | a temp directory |
 | `SESSION_CACHE_TTL_SEC`| How long a session document is kept in memory      | `60`           |
+| `STALWART_DIALECT`     | Dialect of the upstream: `auto`, `rfc`, `stalwart` | `auto`         |
 | `HOST`, `PORT`         | Address of the MCP server                          | `127.0.0.1:8000` |
 | `LOG_LEVEL`            | `debug`, `info`, `warning`, `error`                | `info`         |
 
@@ -138,8 +160,7 @@ The config format is **V2** (`mcp.servers.<name>`, `type: "remote"`, `oauth: fal
         "oauth": false,
         "headers": {
           "Authorization": "Bearer {env:STALWART_API_KEY}"
-        },
-        "enabled": true
+        }
       }
     }
   }
@@ -147,6 +168,8 @@ The config format is **V2** (`mcp.servers.<name>`, `type: "remote"`, `oauth: fal
 ```
 
 `STALWART_API_KEY` is the API key of the mail account - the server never asks for it and never stores it.
+A server is connected by default; add `"disabled": true` to keep it configured but not connected
+(V2 has no `enabled` field).
 
 ## Development
 

@@ -21,6 +21,9 @@ stalwart:
   # The cache is keyed by the sha256 of the bearer; the bearer itself is
   # never stored.
   session_cache_ttl_sec: 60
+  # The JMAP dialect of the upstream: auto (ask the server once), rfc
+  # (RFC 8620/8621 as written down) or stalwart (Stalwart 1.0.0).
+  dialect: "auto"
 
 # Address the server listens on. Keep it on localhost: the server has no
 # authentication of its own, everybody who reaches the port uses their own

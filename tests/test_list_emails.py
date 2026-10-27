@@ -155,7 +155,7 @@ async def test_the_role_of_a_folder_is_resolved_into_its_id(
     await tools.list_emails(mailbox_role="inbox")
 
     body = json.loads(seen[2].content)
-    assert body["methodCalls"][0][1]["filter"] == {"inMailbox": ["mb-inbox"]}
+    assert body["methodCalls"][0][1]["filter"] == {"inMailbox": "mb-inbox"}
 
 
 @pytest.mark.asyncio
@@ -165,7 +165,7 @@ async def test_a_folder_id_is_used_as_it_is(mock_jmap: Any, bearer: Any) -> None
     await tools.list_emails(mailbox_id="mb-42")
 
     body = json.loads(seen[1].content)
-    assert body["methodCalls"][0][1]["filter"] == {"inMailbox": ["mb-42"]}
+    assert body["methodCalls"][0][1]["filter"] == {"inMailbox": "mb-42"}
 
 
 @pytest.mark.asyncio

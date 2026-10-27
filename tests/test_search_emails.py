@@ -67,9 +67,9 @@ async def test_the_header_searches_become_header_conditions(
     assert body["methodCalls"][0][1]["filter"] == {
         "operator": "and",
         "conditions": [
-            {"header": {"name": "subject", "value": "Report"}},
-            {"header": {"name": "from", "value": "boss"}},
-            {"header": {"name": "to", "value": "me"}},
+            {"header": ["subject", "Report"]},
+            {"header": ["from", "boss"]},
+            {"header": ["to", "me"]},
         ],
     }
 
