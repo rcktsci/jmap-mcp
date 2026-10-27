@@ -1,0 +1,20 @@
+services:
+  jmap-mcp:
+    image: ghcr.io/rcktsci/jmap-mcp:2026-10-27
+    pull_policy: always
+    build: .
+    environment:
+      # The address inside the container; the port is published below.
+      HOST: "0.0.0.0"
+      PORT: "8000"
+      LOG_LEVEL: "${LOG_LEVEL:-info}"
+      # The upstream mail server. Empty = the value of config.yml is used.
+      STALWART_URL: "${STALWART_URL:-}"
+      STALWART_SESSION_PATH: "${STALWART_SESSION_PATH:-}"
+      REQUEST_TIMEOUT_SEC: "${REQUEST_TIMEOUT_SEC:-}"
+      SESSION_CACHE_TTL_SEC: "${SESSION_CACHE_TTL_SEC:-}"
+    ports:
+      - "8000:8000/tcp"   # MCP: Streamable HTTP, bearer in the request header
+    volumes:
+      - ./config.yml:/app/config.yml:ro   # cp config.yml.example config.yml, then fill in
+    restart: unless-stopped

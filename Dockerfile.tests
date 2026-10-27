@@ -1,0 +1,17 @@
+FROM python:3.14-slim
+
+WORKDIR /app
+
+ENV PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+COPY requirements.txt requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements-dev.txt
+
+COPY main.py .
+COPY src ./src
+COPY tests ./tests
+COPY pytest.ini .
+
+CMD ["python", "-m", "pytest", "tests", "-q"]

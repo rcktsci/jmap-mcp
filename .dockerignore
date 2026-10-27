@@ -1,0 +1,17 @@
+.env
+config.yml
+.git
+.gitignore
+__pycache__
+**/__pycache__
+*.pyc
+.pytest_cache
+.idea
+.vscode
+.superpowers
+.opencode
+docs
+*.md
+tests
+Dockerfile.tests
+requirements-dev.txt

@@ -1,0 +1,19 @@
+# Local configuration - never committed (no secrets, but the setup of the box).
+config.yml
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local tooling
+.idea/
+.vscode/
+.superpowers/
+.opencode/

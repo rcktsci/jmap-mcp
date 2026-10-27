@@ -1,0 +1,32 @@
+# The upstream mail server (Stalwart). The server holds no credential of it:
+# the API key of the caller is sent with every request.
+stalwart:
+  # Base URL of the mail server - the only upstream of the proxy.
+  url: "https://mail.example.com"
+  # Path of the JMAP session document; /.well-known/jmap is used as fallback.
+  session_path: "/jmap/session"
+  # Timeout of one upstream request, in seconds.
+  request_timeout_sec: 30
+  # Biggest attachment that may be downloaded or uploaded, in MB.
+  max_attachment_mb: 25
+  # Biggest page of messages one tool may return.
+  max_page_size: 50
+  # Biggest body of one message a tool may return, in characters.
+  max_body_chars: 20000
+  # Roots the server may read files from (upload_attachment, phase 2).
+  allow_roots: ["."]
+  # Where downloaded attachments are written (null = a temporary directory).
+  download_dir: null
+  # How long a JMAP session document is kept in memory, in seconds (0 = off).
+  # The cache is keyed by the sha256 of the bearer; the bearer itself is
+  # never stored.
+  session_cache_ttl_sec: 60
+
+# Address the server listens on. Keep it on localhost: the server has no
+# authentication of its own, everybody who reaches the port uses their own
+# key against your mail server.
+listen: "127.0.0.1"
+# Port of the MCP server.
+port: 8000
+# Log level: debug, info, warning, error.
+log_level: "info"
